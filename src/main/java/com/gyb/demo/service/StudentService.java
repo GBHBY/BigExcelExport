@@ -16,20 +16,32 @@ public interface StudentService {
      * create by: gb
      * description: 获取student集合
      * create time: 2021/2/25 16:08
+     *
      * @param sex
      * @param pageNum 页数
      * @param SIZE
      * @return
      */
-    public List<Student> findBySex(String sex, Integer pageNum, Integer SIZE);
+    List<Student> findBySex(String sex, Integer pageNum, Integer SIZE);
+
     /**
      * create by: gb
      * description: 获取总行数
      * create time: 2021/2/25 16:09
-     * @param sex
+     *
      * @return
      */
-    public int getRows(String sex);
+    int getRows();
 
+    /**
+     * create by: gb
+     * description: 查询所有的学生，并且分页
+     * create time: 2021/6/16 23:36
+     *
+     * @param i
+     * @param size
+     * @return
+     */
 
+    List<Student> findAllStudent(int i, int size);
 }

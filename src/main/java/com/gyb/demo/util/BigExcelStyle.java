@@ -5,6 +5,7 @@ import org.apache.poi.hssf.usermodel.HSSFCellStyle;
 import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -18,7 +19,7 @@ import java.util.Map;
 
 public class BigExcelStyle {
 
-    protected final Map<String, CellStyle> styleMap = new HashMap<>();
+    protected final Map<String, XSSFCellStyle> styleMap = new HashMap<>();
 
     /**
      * create by: gb
@@ -28,17 +29,17 @@ public class BigExcelStyle {
      * @param workbook
      * @return
      */
-    protected CellStyle getHeadStyle(SXSSFWorkbook workbook) {
+    protected XSSFCellStyle getHeadStyle(SXSSFWorkbook workbook) {
 
-        CellStyle style = workbook.createCellStyle();
+        XSSFCellStyle style = (XSSFCellStyle) workbook.createCellStyle();
         Font font = workbook.createFont();
         font.setFontHeightInPoints((short) 20);
-        /**不一样**/
-        font.setBold(true);
-        style.setWrapText(true);
+        /**自动换行**/
+        style.setWrapText(false);
         style.setFont(font);
         style.setAlignment(HorizontalAlignment.CENTER);
         style.setBorderBottom(BorderStyle.MEDIUM);
+        style.setVerticalAlignment(VerticalAlignment.CENTER);
         style.setBorderLeft(BorderStyle.MEDIUM);
         style.setBorderRight(BorderStyle.MEDIUM);
         style.setBorderTop(BorderStyle.MEDIUM);
@@ -53,8 +54,8 @@ public class BigExcelStyle {
      * @param workbook
      * @return
      */
-    protected CellStyle getDataStyleEven(SXSSFWorkbook workbook) {
-        CellStyle style = workbook.createCellStyle();
+    protected XSSFCellStyle getDataStyleEven(SXSSFWorkbook workbook) {
+        XSSFCellStyle style = (XSSFCellStyle) workbook.createCellStyle();
         style.setDataFormat(workbook.createDataFormat().getFormat("yyyy-mm-dd"));
         style.setWrapText(true);
         return getCellStyle(style);
@@ -69,8 +70,8 @@ public class BigExcelStyle {
      * @param
      * @return
      */
-    protected CellStyle getTitleStyle(SXSSFWorkbook workbook) {
-        CellStyle style = workbook.createCellStyle();
+    protected XSSFCellStyle getTitleStyle(SXSSFWorkbook workbook) {
+        XSSFCellStyle style = (XSSFCellStyle) workbook.createCellStyle();
         Font font = workbook.createFont();
         font.setFontHeightInPoints((short) 14);
         font.setColor(Font.COLOR_NORMAL);
@@ -81,21 +82,50 @@ public class BigExcelStyle {
     }
 
 
-    protected CellStyle getDataTextStyleEven(SXSSFWorkbook workbook) {
-        CellStyle style = workbook.createCellStyle();
-        style.setDataFormat(workbook.createDataFormat().getFormat("@"));
+    protected XSSFCellStyle getDataTextStyleEven(SXSSFWorkbook workbook) {
+        XSSFCellStyle style = (XSSFCellStyle) workbook.createCellStyle();
+        style.setDataFormat(workbook.createDataFormat().getFormat("yyyy-mm-dd"));
         return getCellStyle(style);
     }
 
-    private CellStyle getCellStyle(CellStyle style) {
-        style.setVerticalAlignment(VerticalAlignment.CENTER);
-        style.setAlignment(HorizontalAlignment.RIGHT);
-        style.setBorderBottom(BorderStyle.MEDIUM);
-        style.setBorderLeft(BorderStyle.MEDIUM);
-        style.setBorderRight(BorderStyle.MEDIUM);
-        style.setBorderTop(BorderStyle.MEDIUM);
+    protected static XSSFCellStyle getCellStyle(XSSFCellStyle style) {
         style.setWrapText(false);
+        // 水平居中
+        style.setAlignment(HorizontalAlignment.CENTER);
+        // 垂直居中
+        style.setVerticalAlignment(VerticalAlignment.CENTER);
+        // 前景颜色
+        style.setFillForegroundColor(IndexedColors.AQUA.getIndex());
+        // 边框
+        style.setBorderBottom(BorderStyle.THIN);
+        style.setBorderRight(BorderStyle.THIN);
+        style.setBorderTop(BorderStyle.THIN);
+        style.setBorderLeft(BorderStyle.THIN);
+        style.setBottomBorderColor(IndexedColors.BLACK.getIndex());
+        style.setRightBorderColor(IndexedColors.BLACK.getIndex());
+        style.setTopBorderColor(IndexedColors.BLACK.getIndex());
+        style.setLeftBorderColor(IndexedColors.BLACK.getIndex());
         return style;
+    }
+
+
+    protected XSSFCellStyle getAndSetXSSFCellStyleHeader(SXSSFWorkbook sxssfWorkbook) {
+        XSSFCellStyle xssfCellStyle = (XSSFCellStyle) sxssfWorkbook.createCellStyle();
+        Font font = sxssfWorkbook.createFont();
+        // 字体大小
+        font.setFontHeightInPoints((short) 14);
+        // 字体粗细
+//        font.setBoldweight((short) 20);
+//        font.setFontName("楷体");
+        // 将字体应用到样式上面
+        xssfCellStyle.setFont(font);
+        // 是否自动换行
+        xssfCellStyle.setWrapText(false);
+        // 水平居中
+        xssfCellStyle.setAlignment(HorizontalAlignment.CENTER);
+        // 垂直居中
+        xssfCellStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+        return xssfCellStyle;
     }
 
 
