@@ -12,17 +12,6 @@ import java.util.List;
  */
 
 public interface StudentService {
-    /**
-     * create by: gb
-     * description: 获取student集合
-     * create time: 2021/2/25 16:08
-     *
-     * @param sex
-     * @param pageNum 页数
-     * @param SIZE
-     * @return
-     */
-    List<Student> findBySex(String sex, Integer pageNum, Integer SIZE);
 
     /**
      * create by: gb

@@ -31,6 +31,7 @@ public class StudentExport extends BigExcelStyle {
     private StudentService studentService;
 
     public void exportExcel(File file) {
+        
         int row = studentService.getRows();
         List<Student> studentList = new ArrayList<>();
         SXSSFWorkbook wb = new SXSSFWorkbook(5000);
@@ -99,6 +100,26 @@ public class StudentExport extends BigExcelStyle {
         cell5.setCellValue(student.getsSex());
         cell5.setCellStyle(styleMap.get("text"));
 
+        Cell cell6 = row1.createCell(line++);
+        cell6.setCellValue(student.getsAddress());
+        cell6.setCellStyle(styleMap.get("text"));
+
+        Cell cell7 = row1.createCell(line++);
+        cell7.setCellValue(student.getsMessage());
+        cell7.setCellStyle(styleMap.get("text"));
+
+        Cell cell8 = row1.createCell(line++);
+        cell8.setCellValue(student.getsTest1());
+        cell8.setCellStyle(styleMap.get("text"));
+
+        Cell cell9 = row1.createCell(line++);
+        cell9.setCellValue(student.getsTest2());
+        cell9.setCellStyle(styleMap.get("text"));
+
+        Cell cell10 = row1.createCell(line++);
+        cell10.setCellValue(student.getsTest3());
+        cell10.setCellStyle(styleMap.get("text"));
+
     }
 
     /**
@@ -127,7 +148,7 @@ public class StudentExport extends BigExcelStyle {
         Cell cell2 = sheetTitleRow.createCell(line++);
         cell2.setCellValue("名字");
         cell2.setCellStyle(styleMap.get("head"));
-        sheet.setColumnWidth(2, "名字".getBytes().length * 2 * 256);
+        sheet.setColumnWidth(2, "名字".getBytes().length * 10 * 256);
 
         Cell cell3 = sheetTitleRow.createCell(line++);
         cell3.setCellValue("出生日期");
@@ -138,6 +159,34 @@ public class StudentExport extends BigExcelStyle {
         cell4.setCellValue("性别");
         cell4.setCellStyle(styleMap.get("head"));
         sheet.setColumnWidth(4, "性别".getBytes().length * 2 * 256);
+
+        Cell cell5 = sheetTitleRow.createCell(line++);
+        cell5.setCellValue("地址");
+        cell5.setCellStyle(styleMap.get("head"));
+        sheet.setColumnWidth(5, "性别".getBytes().length * 10 * 256);
+
+
+        Cell cell6 = sheetTitleRow.createCell(line++);
+        cell6.setCellValue("信息");
+        cell6.setCellStyle(styleMap.get("head"));
+        sheet.setColumnWidth(6, "信息".getBytes().length * 10 * 256);
+
+
+        Cell cell7 = sheetTitleRow.createCell(line++);
+        cell7.setCellValue("test1");
+        cell7.setCellStyle(styleMap.get("head"));
+        sheet.setColumnWidth(7, "test1".getBytes().length * 10 * 256);
+
+        Cell cell8 = sheetTitleRow.createCell(line++);
+        cell8.setCellValue("test2");
+        cell8.setCellStyle(styleMap.get("head"));
+        sheet.setColumnWidth(8, "test2".getBytes().length * 10 * 256);
+
+        Cell cell9 = sheetTitleRow.createCell(line++);
+        cell9.setCellValue("test3");
+        cell9.setCellStyle(styleMap.get("head"));
+        sheet.setColumnWidth(9, "test3".getBytes().length * 10 * 256);
+
 
     }
 

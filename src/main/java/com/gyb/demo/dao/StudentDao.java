@@ -12,7 +12,7 @@ public interface StudentDao {
 
     int deleteByExample(StudentExample example);
 
-    int deleteByPrimaryKey(String sId);
+    int deleteByPrimaryKey(Integer sId);
 
     int insert(Student record);
 
@@ -20,7 +20,7 @@ public interface StudentDao {
 
     List<Student> selectByExample(StudentExample example);
 
-    Student selectByPrimaryKey(String sId);
+    Student selectByPrimaryKey(Integer sId);
 
     int updateByExampleSelective(@Param("record") Student record, @Param("example") StudentExample example);
 
@@ -29,6 +29,4 @@ public interface StudentDao {
     int updateByPrimaryKeySelective(Student record);
 
     int updateByPrimaryKey(Student record);
-
-    List<Student> findBySex(@Param("sex")String sex, @Param("pageNum")Integer pageNum,@Param("size") Integer size);
 }

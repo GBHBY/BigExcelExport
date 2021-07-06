@@ -2,10 +2,15 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.gyb.demo.dao.StudentDao">
   <resultMap id="BaseResultMap" type="com.gyb.demo.bean.Student">
-    <id column="student_s_id" jdbcType="VARCHAR" property="sId" />
+    <id column="student_s_id" jdbcType="INTEGER" property="sId" />
     <result column="student_s_name" jdbcType="VARCHAR" property="sName" />
     <result column="student_s_birth" jdbcType="VARCHAR" property="sBirth" />
     <result column="student_s_sex" jdbcType="VARCHAR" property="sSex" />
+    <result column="student_s_address" jdbcType="VARCHAR" property="sAddress" />
+    <result column="student_s_message" jdbcType="VARCHAR" property="sMessage" />
+    <result column="student_s_test_1" jdbcType="VARCHAR" property="sTest1" />
+    <result column="student_s_test_2" jdbcType="VARCHAR" property="sTest2" />
+    <result column="student_s_test_3" jdbcType="VARCHAR" property="sTest3" />
   </resultMap>
   <sql id="Example_Where_Clause">
     <where>
@@ -67,7 +72,8 @@
   </sql>
   <sql id="Base_Column_List">
     student.s_id as student_s_id, student.s_name as student_s_name, student.s_birth as student_s_birth, 
-    student.s_sex as student_s_sex
+    student.s_sex as student_s_sex, student.s_address as student_s_address, student.s_message as student_s_message, 
+    student.s_test_1 as student_s_test_1, student.s_test_2 as student_s_test_2, student.s_test_3 as student_s_test_3
   </sql>
   <select id="selectByExample" parameterType="com.gyb.demo.bean.StudentExample" resultMap="BaseResultMap">
     select
@@ -91,15 +97,15 @@
       </if>
     </if>
   </select>
-  <select id="selectByPrimaryKey" parameterType="java.lang.String" resultMap="BaseResultMap">
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
     select 
     <include refid="Base_Column_List" />
     from student student
-    where student.s_id = #{sId,jdbcType=VARCHAR}
+    where student.s_id = #{sId,jdbcType=INTEGER}
   </select>
-  <delete id="deleteByPrimaryKey" parameterType="java.lang.String">
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
     delete from student
-    where s_id = #{sId,jdbcType=VARCHAR}
+    where s_id = #{sId,jdbcType=INTEGER}
   </delete>
   <delete id="deleteByExample" parameterType="com.gyb.demo.bean.StudentExample">
     delete from student student
@@ -108,10 +114,12 @@
     </if>
   </delete>
   <insert id="insert" keyColumn="s_id" keyProperty="sId" parameterType="com.gyb.demo.bean.Student" useGeneratedKeys="true">
-    insert into student (s_name, s_birth, s_sex
-      )
-    values (#{sName,jdbcType=VARCHAR}, #{sBirth,jdbcType=VARCHAR}, #{sSex,jdbcType=VARCHAR}
-      )
+    insert into student (s_name, s_birth, s_sex, 
+      s_address, s_message, s_test_1, 
+      s_test_2, s_test_3)
+    values (#{sName,jdbcType=VARCHAR}, #{sBirth,jdbcType=VARCHAR}, #{sSex,jdbcType=VARCHAR}, 
+      #{sAddress,jdbcType=VARCHAR}, #{sMessage,jdbcType=VARCHAR}, #{sTest1,jdbcType=VARCHAR}, 
+      #{sTest2,jdbcType=VARCHAR}, #{sTest3,jdbcType=VARCHAR})
   </insert>
   <insert id="insertSelective" keyColumn="s_id" keyProperty="sId" parameterType="com.gyb.demo.bean.Student" useGeneratedKeys="true">
     insert into student
@@ -125,6 +133,21 @@
       <if test="sSex != null">
         s_sex,
       </if>
+      <if test="sAddress != null">
+        s_address,
+      </if>
+      <if test="sMessage != null">
+        s_message,
+      </if>
+      <if test="sTest1 != null">
+        s_test_1,
+      </if>
+      <if test="sTest2 != null">
+        s_test_2,
+      </if>
+      <if test="sTest3 != null">
+        s_test_3,
+      </if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides=",">
       <if test="sName != null">
@@ -136,6 +159,21 @@
       <if test="sSex != null">
         #{sSex,jdbcType=VARCHAR},
       </if>
+      <if test="sAddress != null">
+        #{sAddress,jdbcType=VARCHAR},
+      </if>
+      <if test="sMessage != null">
+        #{sMessage,jdbcType=VARCHAR},
+      </if>
+      <if test="sTest1 != null">
+        #{sTest1,jdbcType=VARCHAR},
+      </if>
+      <if test="sTest2 != null">
+        #{sTest2,jdbcType=VARCHAR},
+      </if>
+      <if test="sTest3 != null">
+        #{sTest3,jdbcType=VARCHAR},
+      </if>
     </trim>
   </insert>
   <select id="countByExample" parameterType="com.gyb.demo.bean.StudentExample" resultType="java.lang.Long">
@@ -144,12 +182,11 @@
       <include refid="Example_Where_Clause" />
     </if>
   </select>
-
-    <update id="updateByExampleSelective" parameterType="map">
+  <update id="updateByExampleSelective" parameterType="map">
     update student student
     <set>
       <if test="record.sId != null">
-        student.s_id = #{record.sId,jdbcType=VARCHAR},
+        student.s_id = #{record.sId,jdbcType=INTEGER},
       </if>
       <if test="record.sName != null">
         student.s_name = #{record.sName,jdbcType=VARCHAR},
@@ -160,6 +197,21 @@
       <if test="record.sSex != null">
         student.s_sex = #{record.sSex,jdbcType=VARCHAR},
       </if>
+      <if test="record.sAddress != null">
+        student.s_address = #{record.sAddress,jdbcType=VARCHAR},
+      </if>
+      <if test="record.sMessage != null">
+        student.s_message = #{record.sMessage,jdbcType=VARCHAR},
+      </if>
+      <if test="record.sTest1 != null">
+        student.s_test_1 = #{record.sTest1,jdbcType=VARCHAR},
+      </if>
+      <if test="record.sTest2 != null">
+        student.s_test_2 = #{record.sTest2,jdbcType=VARCHAR},
+      </if>
+      <if test="record.sTest3 != null">
+        student.s_test_3 = #{record.sTest3,jdbcType=VARCHAR},
+      </if>
     </set>
     <if test="_parameter != null">
       <include refid="Update_By_Example_Where_Clause" />
@@ -167,10 +219,15 @@
   </update>
   <update id="updateByExample" parameterType="map">
     update student student
-    set student.s_id = #{record.sId,jdbcType=VARCHAR},
+    set student.s_id = #{record.sId,jdbcType=INTEGER},
       student.s_name = #{record.sName,jdbcType=VARCHAR},
       student.s_birth = #{record.sBirth,jdbcType=VARCHAR},
-      student.s_sex = #{record.sSex,jdbcType=VARCHAR}
+      student.s_sex = #{record.sSex,jdbcType=VARCHAR},
+      student.s_address = #{record.sAddress,jdbcType=VARCHAR},
+      student.s_message = #{record.sMessage,jdbcType=VARCHAR},
+      student.s_test_1 = #{record.sTest1,jdbcType=VARCHAR},
+      student.s_test_2 = #{record.sTest2,jdbcType=VARCHAR},
+      student.s_test_3 = #{record.sTest3,jdbcType=VARCHAR}
     <if test="_parameter != null">
       <include refid="Update_By_Example_Where_Clause" />
     </if>
@@ -187,21 +244,34 @@
       <if test="sSex != null">
         s_sex = #{sSex,jdbcType=VARCHAR},
       </if>
+      <if test="sAddress != null">
+        s_address = #{sAddress,jdbcType=VARCHAR},
+      </if>
+      <if test="sMessage != null">
+        s_message = #{sMessage,jdbcType=VARCHAR},
+      </if>
+      <if test="sTest1 != null">
+        s_test_1 = #{sTest1,jdbcType=VARCHAR},
+      </if>
+      <if test="sTest2 != null">
+        s_test_2 = #{sTest2,jdbcType=VARCHAR},
+      </if>
+      <if test="sTest3 != null">
+        s_test_3 = #{sTest3,jdbcType=VARCHAR},
+      </if>
     </set>
-    where s_id = #{sId,jdbcType=VARCHAR}
+    where s_id = #{sId,jdbcType=INTEGER}
   </update>
   <update id="updateByPrimaryKey" parameterType="com.gyb.demo.bean.Student">
     update student
     set s_name = #{sName,jdbcType=VARCHAR},
       s_birth = #{sBirth,jdbcType=VARCHAR},
-      s_sex = #{sSex,jdbcType=VARCHAR}
-    where s_id = #{sId,jdbcType=VARCHAR}
+      s_sex = #{sSex,jdbcType=VARCHAR},
+      s_address = #{sAddress,jdbcType=VARCHAR},
+      s_message = #{sMessage,jdbcType=VARCHAR},
+      s_test_1 = #{sTest1,jdbcType=VARCHAR},
+      s_test_2 = #{sTest2,jdbcType=VARCHAR},
+      s_test_3 = #{sTest3,jdbcType=VARCHAR}
+    where s_id = #{sId,jdbcType=INTEGER}
   </update>
-
-  <select id="findBySex" resultType="com.gyb.demo.bean.Student">
-      select * from student where sex = #{sex} limt(pageNum,size);
-
-
-
-  </select>
 </mapper>

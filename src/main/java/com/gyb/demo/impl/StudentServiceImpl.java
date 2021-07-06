@@ -23,15 +23,10 @@ public class StudentServiceImpl implements StudentService {
     @Autowired
     private StudentMapper mapper;
 
-    @Override
-    public List<Student> findBySex(String sex, Integer pageNum, Integer size) {
-
-        return dao.findBySex(sex, pageNum, size);
-    }
 
     @Override
     public int getRows() {
-        StudentExample studentExample  = new StudentExample();
+        StudentExample studentExample = new StudentExample();
         long row = dao.countByExample(studentExample);
         return (int) row;
     }
@@ -41,7 +36,7 @@ public class StudentServiceImpl implements StudentService {
 
         StudentExample studentExample = new StudentExample();
         StudentExample.Criteria criteria = studentExample.createCriteria().
-                andSIdBetween(String.valueOf(i), String.valueOf(y));
+                andSIdBetween(i, y);
         return dao.selectByExample(studentExample);
     }
 }
