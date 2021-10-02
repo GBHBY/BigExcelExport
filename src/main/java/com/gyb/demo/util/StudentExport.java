@@ -1,8 +1,10 @@
 package com.gyb.demo.util;
 
+import com.gyb.demo.DemoApplication;
 import com.gyb.demo.bean.Student;
 import com.gyb.demo.service.StudentService;
 import org.apache.commons.io.IOUtils;
+import org.apache.poi.ss.formula.functions.T;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -14,9 +16,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * @author gb
@@ -26,31 +27,64 @@ import java.util.List;
  */
 @Component
 public class StudentExport extends BigExcelStyle {
-    private static int SIZE = 10000;
+    private static int SIZE = 20000;
+
     @Autowired
     private StudentService studentService;
+    final CountDownLatch cdl = new CountDownLatch(2);
 
-    public void exportExcel(File file) {
-        
+    public void exportExcel(File file) throws InterruptedException, IOException {
         int row = studentService.getRows();
-        List<Student> studentList = new ArrayList<>();
-        SXSSFWorkbook wb = new SXSSFWorkbook(5000);
+        SXSSFWorkbook wb = new SXSSFWorkbook(60000);
         wb.setCompressTempFiles(true);
         styleMap.clear();
         styleMap.put("head", getAndSetXSSFCellStyleHeader(wb));
         styleMap.put("text", getDataTextStyleEven(wb));
         Sheet sheet = wb.createSheet("demo");
+        Sheet sheet2 = wb.createSheet("demo1");
         createHeadRow(wb, sheet);
-        int index = 1;
-        int number = 1;
-        for (int i = 1; i <= (row + SIZE - 1) / SIZE; i++) {
-            int y = (i - 1) * SIZE + 1;
-            studentList = studentService.findAllStudent(y, y + SIZE);
-            for (Student student : studentList) {
-                createEveryRow(sheet, student, index++, number++);
+        createHeadRow(wb, sheet2);
+        int half = row / 2;
+        Thread t = new Thread(() -> {
+            List<Student> studentList1 = null;
+            int index = 1;
+            int number = 1;
+            for (int i = 1; i <= (half + SIZE - 1) / SIZE; i++) {
+                int y = (i - 1) * SIZE + 1;
+                studentList1 = studentService.findAllStudent(y, y + SIZE - 1);
+                for (Student student : studentList1) {
+                    createEveryRow(sheet2, student, index++, number++);
+                }
+                studentList1.clear();
             }
-            studentList.clear();
+            cdl.countDown();
+        });
+        t.start();
+        long l = System.currentTimeMillis();
+        Thread t1 = new Thread(() -> {
+            int index = 150001;
+            int number = 150001;
+            List<Student> studentList2 = null;
+            for (int i = 1; i <= (half + SIZE - 1) / SIZE; i++) {
+                int y = (i - 1) * SIZE + 150001;
+                studentList2 = studentService.findAllStudent(y, y + SIZE - 1);
+                for (Student student : studentList2) {
+                    createEveryRow(sheet, student, index++, number++);
+                }
+                studentList2.clear();
+            }
+            cdl.countDown();
+        });
+
+        t1.start();
+
+        try {
+            cdl.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
+        long l1 = System.currentTimeMillis();
+        System.out.println("插入时间：" + (l1 - l) / 1000);
         FileOutputStream out = null;
         try {
             out = new FileOutputStream(file);
@@ -62,6 +96,7 @@ public class StudentExport extends BigExcelStyle {
         } finally {
             IOUtils.closeQuietly(out);
         }
+
 
     }
 

@@ -33,7 +33,7 @@ public class ExcelExport {
      * @return
      */
     @GetMapping("test")
-    public String export() {
+    public String export() throws InterruptedException, IOException {
         long l = System.currentTimeMillis();
 
         Date date = new Date();
@@ -63,7 +63,8 @@ public class ExcelExport {
 
         }
         long l1 = System.currentTimeMillis();
-        System.out.println("导出时间：" + (l1 - l)/1000);
+        System.out.println("导出时间：" + (l1 - l) / 1000);
+
 
         return s;
 

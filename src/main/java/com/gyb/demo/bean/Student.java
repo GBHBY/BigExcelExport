@@ -143,16 +143,7 @@ public class Student implements Serializable {
         StringBuilder sb = new StringBuilder();
         sb.append(getClass().getSimpleName());
         sb.append(" [");
-        sb.append("Hash = ").append(hashCode());
         sb.append(", sId=").append(sId);
-        sb.append(", sName=").append(sName);
-        sb.append(", sBirth=").append(sBirth);
-        sb.append(", sSex=").append(sSex);
-        sb.append(", sAddress=").append(sAddress);
-        sb.append(", sMessage=").append(sMessage);
-        sb.append(", sTest1=").append(sTest1);
-        sb.append(", sTest2=").append(sTest2);
-        sb.append(", sTest3=").append(sTest3);
         sb.append(", serialVersionUID=").append(serialVersionUID);
         sb.append("]");
         return sb.toString();

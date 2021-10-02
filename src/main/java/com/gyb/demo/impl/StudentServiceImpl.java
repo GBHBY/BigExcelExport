@@ -37,6 +37,7 @@ public class StudentServiceImpl implements StudentService {
         StudentExample studentExample = new StudentExample();
         StudentExample.Criteria criteria = studentExample.createCriteria().
                 andSIdBetween(i, y);
-        return dao.selectByExample(studentExample);
+        List<Student> students = dao.selectByExample(studentExample);
+        return students;
     }
 }
