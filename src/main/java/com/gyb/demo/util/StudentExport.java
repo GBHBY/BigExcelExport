@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.concurrent.*;
@@ -32,9 +31,9 @@ public class StudentExport extends BigExcelStyle {
     @Autowired
     private StudentService studentService;
 
-    public void exportExcel(File file) throws InterruptedException, IOException {
+    public void exportExcel(File file) {
         ThreadPoolExecutor executor = new ThreadPoolExecutor
-                (2, 4, 10, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(4));
+                (2, 4, 10, TimeUnit.SECONDS, new ArrayBlockingQueue<>(4));
 
         int row = studentService.getRows();
         SXSSFWorkbook wb = new SXSSFWorkbook(60000);
@@ -44,37 +43,18 @@ public class StudentExport extends BigExcelStyle {
         styleMap.put("text", getDataTextStyleEven(wb));
         Sheet sheet = wb.createSheet("demo");
         Sheet sheet2 = wb.createSheet("demo1");
-        createHeadRow(wb, sheet);
-        createHeadRow(wb, sheet2);
+        createHeadRow(sheet);
+        createHeadRow(sheet2);
         int half = row / 2;
 
 
         long l = System.currentTimeMillis();
         ExportThread exportThread1 = new ExportThread(cdl, half, SIZE, studentService, studentExport, sheet, 1, 1, 1);
         Future<?> submit = executor.submit(exportThread1);
-        System.out.println("第一个" + submit.isDone());
+
         ExportThread exportThread2 = new ExportThread(cdl, half, SIZE, studentService, studentExport, sheet2, 1, 1, 150001);
         Future<?> submit1 = executor.submit(exportThread2);
 
-
-
-
-     /*   Thread t1 = new Thread(() -> {
-            int index = 150001;
-            int number = 150001;
-            List<Student> studentList2 = null;
-            for (int i = 1; i <= (half + SIZE - 1) / SIZE; i++) {
-                int y = (i - 1) * SIZE + 150001;
-                studentList2 = studentService.findAllStudent(y, y + SIZE - 1);
-                for (Student student : studentList2) {
-                    createEveryRow(sheet, student, index++, number++);
-                }
-                studentList2.clear();
-            }
-            cdl.countDown();
-        });
-
-        t1.start();*/
 
         try {
             cdl.await();
@@ -87,8 +67,6 @@ public class StudentExport extends BigExcelStyle {
         try {
             out = new FileOutputStream(file);
             wb.write(out);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -100,14 +78,14 @@ public class StudentExport extends BigExcelStyle {
 
     /**
      * create by: gb
-     * description: TODO
+     * description:
      * create time: 2021/2/25 19:27
      *
-     * @param sheet
-     * @param student
-     * @param i
-     * @param number
-     * @return
+     * @param sheet   sheet对象
+     * @param student 实体类对象
+     * @param i       行数
+     * @param number  行值
+     * @return null
      */
     public void createEveryRow(Sheet sheet, Student student, int i, int number) {
         Row row1 = sheet.createRow(i);
@@ -160,10 +138,10 @@ public class StudentExport extends BigExcelStyle {
      * description: TODO
      * create time: 2021/2/25 19:27
      *
-     * @param
-     * @return
+     * @param sheet sheet对象
+     * @return null
      */
-    private void createHeadRow(SXSSFWorkbook wb, Sheet sheet) {
+    private void createHeadRow(Sheet sheet) {
         int line = 0;
         Row sheetTitleRow = sheet.createRow(0);
         sheetTitleRow.setHeightInPoints(20);
