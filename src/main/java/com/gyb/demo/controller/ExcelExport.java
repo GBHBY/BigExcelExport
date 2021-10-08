@@ -53,6 +53,7 @@ public class ExcelExport {
         } finally {
         }
         studentExport.exportExcel(file);
+        System.out.println("完成组装："+ (System.currentTimeMillis()-l));
         String s = null;
         try {
             s = Base64.encodeBase64String(FileUtils.readFileToByteArray(file));
