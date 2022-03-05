@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gyb.demo.dao.CustomerMapper">
+
+<!--dustess_bf_auth.-->
+    <select id="finadAllDept" resultType="com.gyb.demo.bean.DepartmentDO">
+        SELECT
+               id,
+               paths,
+               parent_id parentId,
+               dep_level depLevel,
+               dep_name depName
+
+
+        FROM dustess_bf_auth.bf_auth_department
+        WHERE  deleted = 0
+
+        ORDER BY dep_level ASC;
+
+
+    </select>
+
+
+    <select id="findNum" resultType="com.gyb.demo.bean.QYEntity">
+
+
+    </select>
+    <!--dustess_bf_auth.-->
+    <select id="findAllEmp" resultType="com.gyb.demo.bean.CustomerDept">
+        SELECT
+            a.id customerId,
+            a.deptId AS deptId
+        FROM
+            (
+                SELECT
+                    au.id,
+                    ad.dep_name ,
+                    ad.paths paths,
+                    ad.id deptId
+                FROM
+                    dustess_bf_auth.bf_auth_employee au
+                        LEFT JOIN dustess_bf_auth.bf_auth_department_employee_rel adur ON adur.employee_id = au.id
+                        LEFT JOIN dustess_bf_auth.bf_auth_department ad ON ad.id = adur.department_id
+                where
+                    1=1 and au.deleted = 0 AND ad.deleted = 0
+                  AND (ad.paths like concat(#{path},"-","%") or ad.paths = #{path})
+
+            ) a
+
+
+    </select>
+
+<!-- dustess_bf_customer.-->
+    <select id="getYestodayAddLose" resultType="java.lang.Integer">
+        select count(*) from (select
+
+        distinct id_customer
+
+        from dustess_bf_customer.bf_employee_customer
+
+        where
+        add_time <![CDATA[ >=  ]]>  DATE_FORMAT( DATE_SUB(CURDATE(), INTERVAL 1 DAY), '%Y-%m-%d 00:00:00')
+        and add_time <![CDATA[ <=  ]]>  DATE_FORMAT( DATE_SUB(CURDATE(), INTERVAL 1 DAY), '%Y-%m-%d 23:59:59')
+        <if test="ids.size()>0">
+            and id_employee in
+            <foreach collection="ids" close=")" open="(" separator="," item="id">
+                #{id}
+            </foreach>
+        </if>
+
+        and del_type = 'NONE'
+        ) de
+
+    </select>
+
+    <!--dustess_bf_customer.-->
+    <select id="getYestodayLose" resultType="java.lang.Integer">
+        select
+        count(*) from (select  distinct id_customer
+
+        from dustess_bf_customer.bf_employee_customer
+
+        where
+        add_time <![CDATA[ >=  ]]>  DATE_FORMAT( DATE_SUB(CURDATE(), INTERVAL 1 DAY), '%Y-%m-%d 00:00:00')
+        and add_time <![CDATA[ <=  ]]>  DATE_FORMAT( DATE_SUB(CURDATE(), INTERVAL 1 DAY), '%Y-%m-%d 23:59:59')
+        <if test="ids.size()>0">
+            and id_employee in
+            <foreach collection="ids" close=")" open="(" separator="," item="id">
+                #{id}
+            </foreach>
+        </if>
+
+        and del_type = 'EMPLOYEE_DEL'
+        ) tem
+
+
+    </select>
+
+    <!--dustess_bf_customer.-->
+    <select id="count" resultType="java.lang.Integer">
+        select
+
+        count(*) from (select distinct id_customer
+
+        from dustess_bf_customer.bf_employee_customer
+        where
+        <if test="ids.size()>0">
+
+             id_employee in
+            <foreach collection="ids" close=")" open="(" separator="," item="id">
+                #{id}
+            </foreach>
+            and
+        </if>
+        del_type = #{delete}  ) tem
+    </select>
+
+
+</mapper>
