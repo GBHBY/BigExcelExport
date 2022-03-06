@@ -55,22 +55,12 @@ public class DepartmentDO implements Serializable {
      */
     private Boolean enable;
 
-    /**
-     * 创建人
-     * czw 2021-5-25
-     */
-    /*    private Long createUser;*/
 
     /**
      * 创建日期
      */
     private Date gmtCreate;
 
-    /**
-     * 修改人
-     * czw 2021-5-25
-     */
-    /*    private Long modifyUser;*/
 
     /**
      * 删除人
@@ -93,12 +83,12 @@ public class DepartmentDO implements Serializable {
     private String qwDepartmentId;
 
     /**
-     *  路径
+     * 路径
      */
     private String paths;
 
     /**
-     *  全路径名称
+     * 全路径名称
      */
     private String pathsName;
 

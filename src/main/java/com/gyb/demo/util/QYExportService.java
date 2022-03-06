@@ -6,6 +6,7 @@ import com.gyb.demo.bean.QYEntity;
 import com.gyb.demo.controller.QYExport;
 import com.gyb.demo.dao.CustomerMapper;
 import com.gyb.demo.thread.QYThread;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
@@ -34,6 +35,7 @@ import java.util.stream.Collectors;
  * </pre>
  */
 @Component
+@Slf4j
 public class QYExportService extends BigExcelStyle {
     private static int SIZE = 30000;
     final CountDownLatch cdl = new CountDownLatch(1);
@@ -88,7 +90,6 @@ public class QYExportService extends BigExcelStyle {
      * @param qy     实体类对象
      * @param i      行数
      * @param number 行值
-     * @return null
      */
     public void createEveryRow(Sheet sheet, QYEntity qy, int i, int number) {
         Row row1 = sheet.createRow(i);
@@ -127,7 +128,6 @@ public class QYExportService extends BigExcelStyle {
      * create time: 2021/2/25 19:27
      *
      * @param sheet sheet对象
-     * @return null
      */
     private void createHeadRow(Sheet sheet) {
         int line = 0;
@@ -167,7 +167,10 @@ public class QYExportService extends BigExcelStyle {
 
     }
 
-
+    /**
+     *
+     * @return
+     */
     public List<QYEntity> findAll() {
         try {
             //所有部门
@@ -186,19 +189,15 @@ public class QYExportService extends BigExcelStyle {
             Map<String, List<CustomerDept>> pathEmp = new HashMap<>();
 
             //拿到员工
-            deptList.stream().forEach(x -> {
-                if (x.getId().equals(50576L)) {
-                    System.out.println();
-                }
+            deptList.forEach(x -> {
                 List<CustomerDept> allEmp = customerMapper.findAllEmp(x.getPaths());
                 pathEmp.put(x.getPaths(), allEmp);
 
             });
 
-
 //            部门，员工
             Map<Long, List<Long>> deptEm = new HashMap<>();
-            deptList.stream().forEach(x -> {
+            deptList.forEach(x -> {
                 //拿到这个路径下的员工集合
                 List<CustomerDept> customerDepts = pathEmp.get(x.getPaths());
                 // 把一个部门下的所有员工放入，如果是1级部门，就会把全部的员工都放进去
@@ -215,10 +214,7 @@ public class QYExportService extends BigExcelStyle {
                 int yestodayAddLose = 0;
                 if (value.size() > 0) {
                     Integer yestodayAddLose1 = customerMapper.getYestodayAddLose(value);
-                    if (ObjectUtils.isEmpty(yestodayAddLose1)) {
-                        yestodayAddLose = 0;
-                    } else {
-
+                    if (!ObjectUtils.isEmpty(yestodayAddLose1)) {
                         yestodayAddLose = customerMapper.getYestodayAddLose(value);
                     }
                 }
@@ -249,14 +245,14 @@ public class QYExportService extends BigExcelStyle {
                 }
 
                 //累计失去
-                int employee_del = 0;
+                int employeeDel = 0;
                 if (value.size() > 0) {
-                    employee_del = customerMapper.count(value, "EMPLOYEE_DEL", false);
+                    employeeDel = customerMapper.count(value, "EMPLOYEE_DEL", false);
                 }
                 DepartmentDO departmentDO = deptPath.get(deptId);
                 qyEntity.setDeptName(departmentDO.getDepName());
                 qyEntity.setTotalCustomerNum(none);
-                qyEntity.setTotalLoseCustomerNum(employee_del);
+                qyEntity.setTotalLoseCustomerNum(employeeDel);
                 qyEntity.setPath(departmentDO.getPaths());
                 qyEntity.setParentId(departmentDO.getParentId());
                 qyEntity.setLevel(departmentDO.getDepLevel());
@@ -266,110 +262,9 @@ public class QYExportService extends BigExcelStyle {
             List<QYEntity> collect = qyEntities.stream().sorted(Comparator.comparing(QYEntity::getLevel)).collect(Collectors.toList());
             return collect;
         } catch (Exception e) {
-            System.out.println("报错");
-            System.out.println(prinError(e));
+            log.error("错误", e);
         }
         return null;
-    }
-
-    public static String prinError(Exception e) {
-        StringBuffer messages = new StringBuffer();
-        StackTraceElement[] message = e.getStackTrace();
-        for (StackTraceElement element : message) {
-            messages.append("\t" + element.toString() + "\n");
-        }
-        return messages.toString();
-    }
-
-    //1-50576-50577-50608-50610-50611
-
-    /**
-     * 设置上级部门的客户数
-     *
-     * @return
-     */
-    private List<QYEntity> setSuperiorCustomerNum(List<QYEntity> list, Map<Long, DepartmentDO> deptPath) {
-        list.parallelStream().forEach(x -> {
-            if (x.getParentId().equals(1L) || !isShop(x.getDeptName(), x.getLevel())) {
-                return;
-            } else {
-                if (x.getDeptId().equals(51478L) || x.getParentId().equals(51477L)) {
-                    System.out.println();
-                }
-                add(list, x.getParentId(), x);
-            }
-        });
-        QYEntity qyEntity = new QYEntity();
-        list.parallelStream().forEach(x -> {
-            if (x.getDeptId().equals(1L)) {
-                qyEntity.setTotalLoseCustomerNum(x.getTotalLoseCustomerNum());
-                qyEntity.setYesterdayLoseNum(x.getYesterdayLoseNum());
-                qyEntity.setYesterdayAddedNum(x.getYesterdayAddedNum());
-                qyEntity.setYesterdayNetIncreaseNum(x.getYesterdayNetIncreaseNum());
-                qyEntity.setTotalCustomerNum(x.getTotalCustomerNum());
-            }
-        });
-
-
-        list.parallelStream().forEach(x -> {
-            if (x.getDeptId().equals(50576L) || x.getDeptId().equals(50638L)) {
-                x.setTotalLoseCustomerNum(qyEntity.getTotalLoseCustomerNum());
-                x.setYesterdayLoseNum(qyEntity.getYesterdayLoseNum());
-                x.setYesterdayAddedNum(qyEntity.getYesterdayAddedNum());
-                x.setYesterdayNetIncreaseNum(qyEntity.getYesterdayNetIncreaseNum());
-                x.setTotalCustomerNum(qyEntity.getTotalCustomerNum());
-            }
-
-        });
-
-        List<QYEntity> collect = list.stream().sorted(Comparator.comparing(QYEntity::getLevel)).collect(Collectors.toList());
-        return collect;
-    }
-
-    /**
-     * @param list     实体
-     * @param id       父级id
-     * @param qyEntity 子实体
-     */
-    private void add(List<QYEntity> list, Long id, QYEntity qyEntity) {
-        List<String> parentIds = split(qyEntity.getPath(), String.valueOf(qyEntity.getDeptId()));
-
-        parentIds.parallelStream().forEach(x -> {
-            list.stream().forEach(y -> {
-                if (x.equals(String.valueOf(y.getDeptId()))) {
-                    y.setYesterdayAddedNum(y.getYesterdayAddedNum() + qyEntity.getYesterdayAddedNum());
-                    y.setTotalCustomerNum(y.getTotalCustomerNum() + qyEntity.getTotalCustomerNum());
-                    y.setTotalLoseCustomerNum(y.getTotalLoseCustomerNum() + qyEntity.getTotalLoseCustomerNum());
-                    y.setYesterdayLoseNum(y.getYesterdayLoseNum() + qyEntity.getYesterdayLoseNum());
-                    y.setYesterdayNetIncreaseNum(y.getYesterdayNetIncreaseNum() + qyEntity.getYesterdayNetIncreaseNum());
-                }
-            });
-        });
-    }
-
-    public static void main(String[] args) {
-//        split("1-50576-50577-50608-50610-50611");
-
-    }
-
-    //1-50576-50577-50608-50610-50611
-    private List<String> split(String path, String id) {
-        String[] split = path.split("-");
-        List<String> strings = Arrays.asList(split);
-        List<String> collect = strings.parallelStream().filter(a -> !Objects.equals("1", a)).filter(a -> !Objects.equals(a, id)).collect(Collectors.toList());
-        return collect;
-    }
-
-
-    private boolean isShop(String name, int level) {
-
-        if (8 == level || name.endsWith("诊所") || name.endsWith("店") || name.endsWith("药房") || name.endsWith("食品") || name.endsWith("卖场") || name.endsWith("保健")) {
-            return true;
-        } else {
-            return false;
-        }
-
-
     }
 
 
