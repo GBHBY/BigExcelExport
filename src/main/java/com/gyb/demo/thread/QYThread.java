@@ -1,18 +1,14 @@
 package com.gyb.demo.thread;
 
 import com.gyb.demo.bean.QYEntity;
-import com.gyb.demo.bean.Student;
 import com.gyb.demo.controller.QYExport;
-import com.gyb.demo.service.StudentService;
 import com.gyb.demo.util.QYExportService;
-import com.gyb.demo.util.StudentExport;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.apache.poi.ss.usermodel.Sheet;
 
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
 
 /**
  * @author 郭煜博

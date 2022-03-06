@@ -37,7 +37,7 @@ public class QYExport {
         Date date = new Date();
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd-HH-mm");
         String format1 = format.format(date);
-        String fileName = "学生表.xlsx";
+        String fileName = "QY统计.xlsx";
         String filePath = "D://";
         File file = new File(filePath + format1 + "-" + fileName);
         if (file.exists()) {

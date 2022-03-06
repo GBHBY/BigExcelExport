@@ -5,7 +5,6 @@ import com.gyb.demo.bean.DepartmentDO;
 import com.gyb.demo.bean.QYEntity;
 import com.gyb.demo.controller.QYExport;
 import com.gyb.demo.dao.CustomerMapper;
-import com.gyb.demo.service.StudentService;
 import com.gyb.demo.thread.QYThread;
 import org.apache.commons.io.IOUtils;
 import org.apache.poi.ss.usermodel.Cell;
@@ -15,7 +14,6 @@ import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
-import org.springframework.util.StringUtils;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -23,7 +21,6 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Description:
@@ -40,10 +37,6 @@ import java.util.stream.Stream;
 public class QYExportService extends BigExcelStyle {
     private static int SIZE = 30000;
     final CountDownLatch cdl = new CountDownLatch(1);
-    @Autowired
-    private StudentExport studentExport;
-    @Autowired
-    private StudentService studentService;
 
     @Autowired
     private QYExport qyExport;
