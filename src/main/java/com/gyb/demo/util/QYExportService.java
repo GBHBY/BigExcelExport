@@ -168,7 +168,6 @@ public class QYExportService extends BigExcelStyle {
     }
 
     /**
-     *
      * @return
      */
     public List<QYEntity> findAll() {
@@ -215,7 +214,7 @@ public class QYExportService extends BigExcelStyle {
                 if (value.size() > 0) {
                     Integer yestodayAddLose1 = customerMapper.getYestodayAddLose(value);
                     if (!ObjectUtils.isEmpty(yestodayAddLose1)) {
-                        yestodayAddLose = customerMapper.getYestodayAddLose(value);
+                        yestodayAddLose = yestodayAddLose1;
                     }
                 }
                 qyEntity.setYesterdayAddedNum(yestodayAddLose);

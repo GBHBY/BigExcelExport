@@ -59,8 +59,8 @@
         from dustess_bf_customer.bf_employee_customer
 
         where
-        add_time <![CDATA[ >=  ]]>  DATE_FORMAT( DATE_SUB(CURDATE(), INTERVAL 1 DAY), '%Y-%m-%d 00:00:00')
-        and add_time <![CDATA[ <=  ]]>  DATE_FORMAT( DATE_SUB(CURDATE(), INTERVAL 1 DAY), '%Y-%m-%d 23:59:59')
+        add_time <![CDATA[ >=  ]]>  DATE_FORMAT( DATE_SUB(CURDATE(), INTERVAL 2 DAY), '%Y-%m-%d 00:00:00')
+        and add_time <![CDATA[ <=  ]]>  DATE_FORMAT( DATE_SUB(CURDATE(), INTERVAL 2 DAY), '%Y-%m-%d 23:59:59')
         <if test="ids.size()>0">
             and id_employee in
             <foreach collection="ids" close=")" open="(" separator="," item="id">
@@ -81,8 +81,8 @@
         from dustess_bf_customer.bf_employee_customer
 
         where
-        add_time <![CDATA[ >=  ]]>  DATE_FORMAT( DATE_SUB(CURDATE(), INTERVAL 1 DAY), '%Y-%m-%d 00:00:00')
-        and add_time <![CDATA[ <=  ]]>  DATE_FORMAT( DATE_SUB(CURDATE(), INTERVAL 1 DAY), '%Y-%m-%d 23:59:59')
+        add_time <![CDATA[ >=  ]]>  DATE_FORMAT( DATE_SUB(CURDATE(), INTERVAL 2 DAY), '%Y-%m-%d 00:00:00')
+        and add_time <![CDATA[ <=  ]]>  DATE_FORMAT( DATE_SUB(CURDATE(), INTERVAL 2 DAY), '%Y-%m-%d 23:59:59')
         <if test="ids.size()>0">
             and id_employee in
             <foreach collection="ids" close=")" open="(" separator="," item="id">
@@ -112,7 +112,12 @@
             </foreach>
             and
         </if>
-        del_type = #{delete}  ) tem
+        del_type = #{delete}
+        and add_time <![CDATA[ <=  ]]>  DATE_FORMAT( DATE_SUB(CURDATE(), INTERVAL 2 DAY), '%Y-%m-%d 23:59:59')
+
+            ) tem
+
+
     </select>
 
 
