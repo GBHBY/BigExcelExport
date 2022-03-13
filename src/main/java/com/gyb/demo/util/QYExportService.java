@@ -5,7 +5,7 @@ import com.gyb.demo.bean.*;
 import com.gyb.demo.controller.QYExport;
 import com.gyb.demo.dao.CustomerDetailMapper;
 import com.gyb.demo.dao.CustomerMapper;
-import com.gyb.demo.thread.QYThread;
+import com.gyb.demo.thread.QuanYeeThread;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.poi.ss.usermodel.Cell;
@@ -18,9 +18,7 @@ import org.springframework.stereotype.Component;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.time.Duration;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.Month;
 import java.util.*;
 import java.util.concurrent.*;
@@ -61,7 +59,7 @@ public class QYExportService extends BigExcelStyle {
     private CustomerMapper customerMapper;
 
 
-    public void exportExcel(File file) {
+    public void exportExcel(File file, String date) {
         ThreadPoolExecutor executor = new ThreadPoolExecutor
                 (2, 4, 10, TimeUnit.SECONDS, new ArrayBlockingQueue<>(4));
 
@@ -70,15 +68,13 @@ public class QYExportService extends BigExcelStyle {
         styleMap.clear();
         styleMap.put("head", getAndSetXSSFCellStyleHeader(wb));
         styleMap.put("text", getDataTextStyleEven(wb));
-        Sheet sheet = wb.createSheet("demo");
+        Sheet sheet = wb.createSheet("统计");
         createHeadRow(sheet);
         long l = System.currentTimeMillis();
-        QYThread exportThread1 = new QYThread(600000, SIZE, qyExportService, qyExport, sheet, 1, 1, 1);
+        QuanYeeThread exportThread1 = new QuanYeeThread(600000, SIZE, qyExportService, qyExport, sheet, 1, 1, 1, date);
         exportThread1.run();
-
-
         long l1 = System.currentTimeMillis();
-        System.out.println("插入时间：" + (l1 - l) / 1000);
+        log.info("插入时间：{}", (l1 - l) / 1000);
         FileOutputStream out = null;
         try {
             out = new FileOutputStream(file);
@@ -161,12 +157,12 @@ public class QYExportService extends BigExcelStyle {
         sheet.setColumnWidth(2, "id".getBytes().length * 2 * 256);
 
         Cell cell3 = sheetTitleRow.createCell(line++);
-        cell3.setCellValue("昨日员工删除客户数");
+        cell3.setCellValue("日员工删除客户数");
         cell3.setCellStyle(styleMap.get("head"));
         sheet.setColumnWidth(3, "名字".getBytes().length * 10 * 256);
 
         Cell cell4 = sheetTitleRow.createCell(line++);
-        cell4.setCellValue("昨日客户删除员工数");
+        cell4.setCellValue("日客户删除员工数");
         cell4.setCellStyle(styleMap.get("head"));
         sheet.setColumnWidth(4, "出生日期".getBytes().length * 2 * 256);
 
@@ -180,11 +176,13 @@ public class QYExportService extends BigExcelStyle {
     }
 
     /**
+     * @param date
      * @return
      */
-    public List<QYEntity> findAll() {
+    public List<QYEntity> findAll(String date) {
+        long l = System.currentTimeMillis();
         try {
-            LocalDate date = LocalDate.of(2022, Month.MARCH, 12);
+            LocalDate localDate = LocalDate.parse(date);
             //所有部门
             List<DepartmentDO> deptList = customerMapper.finadAllDept();
 
@@ -217,18 +215,21 @@ public class QYExportService extends BigExcelStyle {
                 deptPath.put(x.getId(), x);
             });
             List<QYEntity> qyEntities = new ArrayList<>();
+            log.info("获取部门耗时{}秒", (System.currentTimeMillis() - 1));
 
             for (Map.Entry<Long, List<Long>> entry : deptEm.entrySet()) {
 //            List<Long> value = new ArrayList<>();
 //            value.add(1L);
 //            value.add(2L);
 //            value.add(3L);
+//            value.add(4L);
+//            value.add(5L);
 //            Long deptId = 1L;
                 List<Long> value = entry.getValue();
                 Long deptId = entry.getKey();
                 QYEntity qyEntity = new QYEntity();
                 qyEntity.setDeptId(deptId);
-                qyEntity.setLocalDate(date);
+                qyEntity.setLocalDate(localDate);
                 if (value.size() == 0) {
                     qyEntity.setDeptId(deptId);
                     qyEntity.setTotalCustomerNum(0);
@@ -240,73 +241,85 @@ public class QYExportService extends BigExcelStyle {
 
                 }
                 //计算净增
-                Integer increase = customerDetailMapper.selectIncrease(value, date);
+                Integer increase = customerDetailMapper.selectIncrease(value, localDate);
                 qyEntity.setYesterdayAddedNum(increase);
                 //累计客户
-                Integer all = customerMapper.count(value, "NONE", date);
+                Integer all = customerMapper.count(value, "NONE", localDate);
                 //拿到所有客户id
                 //*************************************千万不要忘记这个要从客户关系表中查********************************************//
-                qyEntity.setTotalCustomerNum(customerDetailMapper.selectAddAllNum(value));
-                List<Long> customerId = customerDetailMapper.selectCusDelete(value, date).parallelStream().map(EmployeeCustomerListDTO::getIdCustomer).collect(Collectors.toList());
-                //计算员工删除客户数
-                // 拿到今天所有的员工和客户关系
-                List<CustomerDetailDO> todayCustomerDetailDOS = customerDetailMapper.selectAllCustomer(value, date);
-                //拿到全部的员工客户关系,包括以前的
-                List<CustomerDetailDO> customerDetailDOS = customerDetailMapper.selectAllCustomer(value, null);
-                //拿到还是客户的客户id
-                List<Long> isCustomer = customerDetailDOS.parallelStream().filter(x -> StringUtils.equals(x.getState(), ADD)).map(CustomerDetailDO::getIdCustomer).collect(Collectors.toList());
-                //此时的customerId就已经都是非客户id
-                customerId.removeAll(isCustomer);
-                //非客户
-                List<CustomerDetailDO> notCustomerAll = new ArrayList<>();
-                customerId.stream().forEach(x -> {
-                    todayCustomerDetailDOS.forEach(y -> {
-                        Long idCustomer = y.getIdCustomer();
-                        if (x.equals(idCustomer)) {
-                            notCustomerAll.add(y);
-                        }
-                    });
-                });
-                //把删除客户或者客户删除员工的那一条记录拿到
-                List<CustomerDetailDO> notCustomer = notCustomerAll.parallelStream().filter(x -> StringUtils.equals(x.getState(), x.getType())).collect(Collectors.toList());
-                //是员工删除客户的集合
-                List<CustomerDetailDO> customerDeleteList = notCustomer.parallelStream().filter(x -> StringUtils.equals(x.getState(), CUSTOMER_DEL)).collect(Collectors.toList());
-                //客户删除员工的集合
-                List<CustomerDetailDO> employeeDeleteList = notCustomer.parallelStream().filter(x -> StringUtils.equals(x.getState(), EMPLOYEE_DEL)).collect(Collectors.toList());
-                List<Long> customerDeleteIds = customerDeleteList.parallelStream().map(CustomerDetailDO::getIdCustomer).collect(Collectors.toList());
-                List<Long> employeeDeleteIds = employeeDeleteList.parallelStream().map(CustomerDetailDO::getIdCustomer).collect(Collectors.toList());
-                //双删客户
-                List<Long> doubleRemove = customerDeleteIds.parallelStream().filter(employeeDeleteIds::contains).collect(Collectors.toList());
-                //双删客户实体
-                List<CustomerDetailDO> doubleRemoveEntity = new ArrayList<>();
-                doubleRemove.parallelStream().forEach(x -> {
-                    todayCustomerDetailDOS.forEach(y -> {
-                        if (x.equals(y.getIdCustomer())) {
-                            doubleRemoveEntity.add(y);
-                        }
-                    });
-                });
-                int customerDeleteNum = 0;
-                int employeeDeleteNum = 0;
-                //根据客户id分组
-                Map<Long, List<CustomerDetailDO>> doubleRemoveGroup = doubleRemoveEntity.parallelStream().collect(Collectors.groupingBy(CustomerDetailDO::getIdCustomer));
+//            qyEntity.setTotalCustomerNum(customerDetailMapper.selectAddAllNum(value));
+                qyEntity.setTotalCustomerNum(all);
+                //拿到日期为date的被删除的客户id
+                List<Long> todayDeleteCusList = customerDetailMapper.selectCusDelete(value, localDate).parallelStream().map(CustomerDetailDO::getIdCustomer).collect(Collectors.toList());
+                if (todayDeleteCusList.size() > 0) {
+
+                    //拿到date日期被删除的客户和他的员工的最新关系是ADD的
+
+                    List<CustomerDetailDO> upDateIsAdd = customerDetailMapper.selectUpToDate(todayDeleteCusList);
+                    List<Long> upDateIsAddId = upDateIsAdd.parallelStream().filter(x -> StringUtils.equals(ADD, x.getState())).map(CustomerDetailDO::getIdCustomer).collect(Collectors.toList());
 
 
-                for (Map.Entry<Long, List<CustomerDetailDO>> map : doubleRemoveGroup.entrySet()) {
-                    Long idCustomer = map.getKey();
-                    List<CustomerDetailDO> doubleRemoveList = map.getValue();
-                    String type = doubleRemoveList.parallelStream().sorted(Comparator.comparing(CustomerDetailDO::getId).reversed()).collect(Collectors.toList()).get(0).getType();
-                    if (type.equals(EMPLOYEE_DEL)) {
-                        employeeDeleteNum++;
-                    } else {
-                        customerDeleteNum++;
+                    //此时的todayDeleteCusList全部为完全解除关系的客户id
+                    todayDeleteCusList.removeAll(upDateIsAddId);
+                    //计算员工删除的客户数
+                    // 拿到今天所有的员工和客户关系
+                    List<CustomerDetailDO> todayCustomerDetailDOS = customerDetailMapper.selectAllCustomer(value, localDate);
+
+                    //此时的customerId就已经都是非客户id
+
+                    //非客户
+                    List<CustomerDetailDO> notCustomerAll = new ArrayList<>();
+                    todayDeleteCusList.stream().forEach(x -> {
+                        todayCustomerDetailDOS.forEach(y -> {
+                            Long idCustomer = y.getIdCustomer();
+                            if (x.equals(idCustomer)) {
+                                notCustomerAll.add(y);
+                            }
+                        });
+                    });
+                    //把删除客户或者客户删除员工的那一条记录拿到
+                    List<CustomerDetailDO> notCustomer = notCustomerAll.parallelStream().filter(x -> StringUtils.equals(x.getState(), x.getType())).collect(Collectors.toList());
+                    //是员工删除客户的集合
+                    List<CustomerDetailDO> customerDeleteList = notCustomer.parallelStream().filter(x -> StringUtils.equals(x.getState(), CUSTOMER_DEL)).collect(Collectors.toList());
+                    //客户删除员工的集合
+                    List<CustomerDetailDO> employeeDeleteList = notCustomer.parallelStream().filter(x -> StringUtils.equals(x.getState(), EMPLOYEE_DEL)).collect(Collectors.toList());
+                    List<Long> customerDeleteIds = customerDeleteList.parallelStream().map(CustomerDetailDO::getIdCustomer).collect(Collectors.toList());
+                    List<Long> employeeDeleteIds = employeeDeleteList.parallelStream().map(CustomerDetailDO::getIdCustomer).collect(Collectors.toList());
+                    //双删客户
+                    List<Long> doubleRemove = customerDeleteIds.parallelStream().filter(employeeDeleteIds::contains).collect(Collectors.toList());
+                    //双删客户实体
+                    List<CustomerDetailDO> doubleRemoveEntity = new ArrayList<>();
+                    doubleRemove.parallelStream().forEach(x -> {
+                        todayCustomerDetailDOS.forEach(y -> {
+                            if (x.equals(y.getIdCustomer())) {
+                                doubleRemoveEntity.add(y);
+                            }
+                        });
+                    });
+                    int customerDeleteNum = 0;
+                    int employeeDeleteNum = 0;
+                    //根据客户id分组
+                    Map<Long, List<CustomerDetailDO>> doubleRemoveGroup = doubleRemoveEntity.parallelStream().collect(Collectors.groupingBy(CustomerDetailDO::getIdCustomer));
+
+
+                    for (Map.Entry<Long, List<CustomerDetailDO>> map : doubleRemoveGroup.entrySet()) {
+                        List<CustomerDetailDO> doubleRemoveList = map.getValue();
+                        String type = doubleRemoveList.parallelStream().sorted(Comparator.comparing(CustomerDetailDO::getId).reversed()).collect(Collectors.toList()).get(0).getType();
+                        if (type.equals(EMPLOYEE_DEL)) {
+                            employeeDeleteNum++;
+                        } else {
+                            customerDeleteNum++;
+                        }
+
+
                     }
+                    qyEntity.setYesterdayEmployeeDel(employeeDeleteList.parallelStream().map(CustomerDetailDO::getIdCustomer).distinct().collect(Collectors.toList()).size() - customerDeleteNum);
+                    qyEntity.setYesterdayCustomerDel(customerDeleteList.parallelStream().map(CustomerDetailDO::getIdCustomer).distinct().collect(Collectors.toList()).size() - employeeDeleteNum);
+                } else {
 
-
+                    qyEntity.setYesterdayEmployeeDel(0);
+                    qyEntity.setYesterdayCustomerDel(0);
                 }
-
-                qyEntity.setYesterdayEmployeeDel(employeeDeleteList.size() - customerDeleteNum);
-                qyEntity.setYesterdayCustomerDel(customerDeleteList.size() - employeeDeleteNum);
 
                 qyEntities.add(qyEntity);
             }

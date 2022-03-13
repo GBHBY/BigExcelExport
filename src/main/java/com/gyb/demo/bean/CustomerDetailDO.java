@@ -2,30 +2,21 @@ package com.gyb.demo.bean;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
-import com.fasterxml.jackson.annotation.JsonFormat;
+import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.io.Serializable;
-import java.time.LocalDateTime;
 import java.util.Date;
 
 /**
- * Description:
- *
- * @author GB
- * @date 2022/3/9 21:39
- *
- * <pre>
- *              www.dustess.com
- *      Copyright (c) 2022. All Rights Reserved.
- * </pre>
+ * @author gyb
  */
+@ApiModel(value = "generate.BfCustomerDetail")
+@TableName("bf_customer_detail_copy1")
 @Data
-@ApiModel(value = "EmployeeDeleteDTO",description = "客户对应各种情况的数量")
-public class EmployeeDeleteDTO implements Serializable {
-
+public class CustomerDetailDO implements Serializable {
     /**
      * 主键
      */
@@ -76,8 +67,4 @@ public class EmployeeDeleteDTO implements Serializable {
     private Date gmtModify;
 
     private static final long serialVersionUID = 1L;
-
-
-
-
 }

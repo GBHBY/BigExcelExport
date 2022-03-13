@@ -1,12 +1,16 @@
 package com.gyb.demo.controller;
 
-import com.gyb.demo.dao.CustomerDetailMapper;
 import com.gyb.demo.util.QYExportService;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiOperation;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.tomcat.util.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.File;
@@ -14,6 +18,8 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.util.Date;
 
 /**
@@ -29,20 +35,21 @@ import java.util.Date;
  */
 @RestController
 @RequestMapping("qy")
+@Api("qy导出")
+@Slf4j
 public class QYExport {
     @Autowired
     private QYExportService exportExcel;
 
-    @Autowired
-    private CustomerDetailMapper customerDetailMapper;
 
-    @GetMapping("test")
-    public String export() throws InterruptedException, IOException {
+    @GetMapping("export")
+    @ApiOperation("全量统计导出")
+    @ApiImplicitParam(name = "date", value = "导出的日期")
+    public String export(@RequestParam("date") String date) {
         long l = System.currentTimeMillis();
-
-        Date date = new Date();
+        Date fileDate = new Date();
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd-HH-mm");
-        String format1 = format.format(date);
+        String format1 = format.format(fileDate);
         String fileName = "QY统计.xlsx";
         String filePath = "D://";
         File file = new File(filePath + format1 + "-" + fileName);
@@ -52,30 +59,26 @@ public class QYExport {
         try {
             file.createNewFile();
         } catch (IOException e) {
-            System.out.println("创造文件失败");
+            log.error("创建文件失败", e);
             return "文件失败";
         } finally {
         }
         try {
-            exportExcel.exportExcel(file);
+            exportExcel.exportExcel(file, date);
         } catch (Exception e) {
-            System.out.println(e);
+            log.error("错误", e);
         }
 
-        System.out.println("完成组装：" + (System.currentTimeMillis() - l));
+        log.info("完成组装：{}毫秒", (System.currentTimeMillis() - l));
         String s = null;
         try {
             s = Base64.encodeBase64String(FileUtils.readFileToByteArray(file));
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
-
-
+            long l1 = System.currentTimeMillis();
+            log.info("导出时间：{}秒", (l1 - l) / 1000);
         }
-        long l1 = System.currentTimeMillis();
-        System.out.println("导出时间：" + (l1 - l) / 1000);
-
-
         return s;
 
 
