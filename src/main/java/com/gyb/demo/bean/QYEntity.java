@@ -4,6 +4,7 @@ import lombok.Data;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import java.io.Serializable;
+import java.time.LocalDate;
 
 /**
  * Description:
@@ -20,26 +21,22 @@ import java.io.Serializable;
 public class QYEntity implements Serializable {
 
 
-    @ApiModelProperty(value = "昨日新增数")
+    @ApiModelProperty(value = "日新增客户数")
     private Integer yesterdayAddedNum;
 
-    @ApiModelProperty(value = "昨日流失数")
-    private Integer yesterdayLoseNum;
+    @ApiModelProperty(value = "日员工删除客户数")
+    private Integer yesterdayEmployeeDel;
 
-    @ApiModelProperty(value = "昨日净增人数")
-    private Integer yesterdayNetIncreaseNum;
+
+
+    @ApiModelProperty(value = "日客户删除员工数")
+    private Integer yesterdayCustomerDel;
 
     @ApiModelProperty(value = "累计客户总数")
     private Integer totalCustomerNum;
 
-    @ApiModelProperty(value = "累计流失总数")
-    private Integer totalLoseCustomerNum;
-
     @ApiModelProperty(value = "部门Id")
     private Long deptId;
-
-    @ApiModelProperty(value = "父级部门Id")
-    private Long parentId;
 
     @ApiModelProperty(value = "部门名称")
     private String deptName;
@@ -47,8 +44,11 @@ public class QYEntity implements Serializable {
     @ApiModelProperty(value = "路径")
     private String path;
 
-
+    @ApiModelProperty(value = "级别")
     private Integer level;
+
+    @ApiModelProperty(value = "日期")
+    private LocalDate localDate;
 
 
     private static final long serialVersionUID = 9147621738022695711L;

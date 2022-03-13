@@ -1,5 +1,6 @@
 package com.gyb.demo.controller;
 
+import com.gyb.demo.dao.CustomerDetailMapper;
 import com.gyb.demo.util.QYExportService;
 import org.apache.commons.io.FileUtils;
 import org.apache.tomcat.util.codec.binary.Base64;
@@ -11,6 +12,8 @@ import org.springframework.web.bind.annotation.RestController;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 /**
@@ -29,6 +32,9 @@ import java.util.Date;
 public class QYExport {
     @Autowired
     private QYExportService exportExcel;
+
+    @Autowired
+    private CustomerDetailMapper customerDetailMapper;
 
     @GetMapping("test")
     public String export() throws InterruptedException, IOException {

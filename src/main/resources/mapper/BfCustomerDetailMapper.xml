@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gyb.demo.dao.CustomerDetailMapper">
+    <resultMap id="BaseResultMap" type="com.gyb.demo.bean.CustomerDetailDO">
+        <id column="id" jdbcType="BIGINT" property="id"/>
+        <result column="type" jdbcType="VARCHAR" property="type"/>
+        <result column="id_employee" jdbcType="BIGINT" property="idEmployee"/>
+        <result column="id_customer" jdbcType="BIGINT" property="idCustomer"/>
+        <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate"/>
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
+
+
+    </resultMap>
+    <select id="selectIncrease" resultType="java.lang.Integer">
+        select count(*) from (
+
+
+        select distinct(id_customer) s from bf_customer_detail where create_time = #{date} and state = 'ADD' and
+        id_employee
+        in
+
+        <foreach collection="ids" item="id" separator="," open="(" close=")">
+
+            #{id}
+        </foreach>
+        ) a
+
+    </select>
+    <select id="selectCusDelete" resultType="com.gyb.demo.bean.EmployeeCustomerListDTO">
+        select
+        distinct (id_customer) idCustomer from bf_customer_detail where
+        create_time = #{date} and
+        id_employee in
+        <foreach collection="ids" separator="," open="(" close=")" item="id">
+            #{id}
+
+        </foreach>
+
+
+    </select>
+    <select id="selectAllCustomer" resultType="com.gyb.demo.bean.CustomerDetailDO">
+        select
+        id,
+        id_customer,
+        state,
+        gmt_create,
+        type
+
+
+        from bf_customer_detail
+        where
+        <if test="date!=null">
+            create_time = #{date} and
+        </if>
+        id_employee in
+
+        <foreach collection="ids" separator="," open="(" close=")" item="id">
+            #{id}
+
+        </foreach>
+
+
+    </select>
+    <select id="selectAddAllNum" resultType="java.lang.Integer">
+
+ select count(*) from (  select distinct(id_customer) from bf_customer_detail where
+        id_employee in
+        <foreach collection="ids" separator="," open="(" close=")" item="id">
+            #{id}
+
+        </foreach>
+        and state = 'ADD') a
+    </select>
+
+
+</mapper>

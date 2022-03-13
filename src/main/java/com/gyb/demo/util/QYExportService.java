@@ -1,9 +1,9 @@
 package com.gyb.demo.util;
 
-import com.gyb.demo.bean.CustomerDept;
-import com.gyb.demo.bean.DepartmentDO;
-import com.gyb.demo.bean.QYEntity;
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
+import com.gyb.demo.bean.*;
 import com.gyb.demo.controller.QYExport;
+import com.gyb.demo.dao.CustomerDetailMapper;
 import com.gyb.demo.dao.CustomerMapper;
 import com.gyb.demo.thread.QYThread;
 import lombok.extern.slf4j.Slf4j;
@@ -14,11 +14,14 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.util.ObjectUtils;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.Month;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
@@ -44,6 +47,14 @@ public class QYExportService extends BigExcelStyle {
     private QYExport qyExport;
     @Autowired
     private QYExportService qyExportService;
+
+    @Autowired
+    private CustomerDetailMapper customerDetailMapper;
+
+
+    private final String CUSTOMER_DEL = "CUSTOMER_DEL";
+    private final String EMPLOYEE_DEL = "EMPLOYEE_DEL";
+    private final String ADD = "ADD";
 
 
     @Autowired
@@ -95,28 +106,28 @@ public class QYExportService extends BigExcelStyle {
         Row row1 = sheet.createRow(i);
         int line = 0;
         Cell cell1 = row1.createCell(line++);
-        cell1.setCellValue(qy.getDeptId());
+        cell1.setCellValue(qy.getLocalDate().toString());
         cell1.setCellStyle(styleMap.get("head"));
-
 
         Cell cell2 = row1.createCell(line++);
-        cell2.setCellValue(qy.getYesterdayAddedNum());
-        cell1.setCellStyle(styleMap.get("head"));
+        cell2.setCellValue(qy.getDeptId());
+        cell2.setCellStyle(styleMap.get("head"));
+
 
         Cell cell3 = row1.createCell(line++);
-        cell3.setCellValue(qy.getYesterdayLoseNum());
+        cell3.setCellValue(qy.getYesterdayAddedNum());
         cell3.setCellStyle(styleMap.get("head"));
 
         Cell cell4 = row1.createCell(line++);
-        cell4.setCellValue(qy.getYesterdayNetIncreaseNum());
+        cell4.setCellValue(qy.getYesterdayEmployeeDel());
         cell4.setCellStyle(styleMap.get("head"));
 
         Cell cell5 = row1.createCell(line++);
-        cell5.setCellValue(qy.getTotalCustomerNum());
+        cell5.setCellValue(qy.getYesterdayCustomerDel());
         cell5.setCellStyle(styleMap.get("head"));
 
         Cell cell6 = row1.createCell(line++);
-        cell6.setCellValue(qy.getTotalLoseCustomerNum());
+        cell6.setCellValue(qy.getTotalCustomerNum());
         cell6.setCellStyle(styleMap.get("head"));
 
 
@@ -135,34 +146,35 @@ public class QYExportService extends BigExcelStyle {
         sheetTitleRow.setHeightInPoints(20);
 
         Cell cell0 = sheetTitleRow.createCell(line++);
-        cell0.setCellValue("部门");
+        cell0.setCellValue("日期");
         cell0.setCellStyle(styleMap.get("head"));
         sheet.setColumnWidth(0, "序号".getBytes().length * 2 * 256);
 
         Cell cell1 = sheetTitleRow.createCell(line++);
-        cell1.setCellValue("昨日新增客户数");
+        cell1.setCellValue("部门");
         cell1.setCellStyle(styleMap.get("head"));
         sheet.setColumnWidth(1, "序号".getBytes().length * 2 * 256);
 
         Cell cell2 = sheetTitleRow.createCell(line++);
-        cell2.setCellValue("昨日流失客户数");
+        cell2.setCellValue("日新增客户数");
         cell2.setCellStyle(styleMap.get("head"));
         sheet.setColumnWidth(2, "id".getBytes().length * 2 * 256);
 
         Cell cell3 = sheetTitleRow.createCell(line++);
-        cell3.setCellValue("昨日日净增客户数");
+        cell3.setCellValue("昨日员工删除客户数");
         cell3.setCellStyle(styleMap.get("head"));
         sheet.setColumnWidth(3, "名字".getBytes().length * 10 * 256);
 
         Cell cell4 = sheetTitleRow.createCell(line++);
-        cell4.setCellValue("累计客户总数");
+        cell4.setCellValue("昨日客户删除员工数");
         cell4.setCellStyle(styleMap.get("head"));
         sheet.setColumnWidth(4, "出生日期".getBytes().length * 2 * 256);
 
+
         Cell cell5 = sheetTitleRow.createCell(line++);
-        cell5.setCellValue("累计流失客户总数");
+        cell5.setCellValue("累计客户总数");
         cell5.setCellStyle(styleMap.get("head"));
-        sheet.setColumnWidth(5, "性别".getBytes().length * 2 * 256);
+        sheet.setColumnWidth(5, "出生日期".getBytes().length * 2 * 256);
 
 
     }
@@ -172,6 +184,7 @@ public class QYExportService extends BigExcelStyle {
      */
     public List<QYEntity> findAll() {
         try {
+            LocalDate date = LocalDate.of(2022, Month.MARCH, 12);
             //所有部门
             List<DepartmentDO> deptList = customerMapper.finadAllDept();
 
@@ -206,61 +219,101 @@ public class QYExportService extends BigExcelStyle {
             List<QYEntity> qyEntities = new ArrayList<>();
 
             for (Map.Entry<Long, List<Long>> entry : deptEm.entrySet()) {
+//            List<Long> value = new ArrayList<>();
+//            value.add(1L);
+//            value.add(2L);
+//            value.add(3L);
+//            Long deptId = 1L;
                 List<Long> value = entry.getValue();
                 Long deptId = entry.getKey();
-                //        拿到昨日新增客户数
                 QYEntity qyEntity = new QYEntity();
-                int yestodayAddLose = 0;
-                if (value.size() > 0) {
-                    Integer yestodayAddLose1 = customerMapper.getYestodayAddLose(value);
-                    if (!ObjectUtils.isEmpty(yestodayAddLose1)) {
-                        yestodayAddLose = yestodayAddLose1;
-                    }
-                }
-                qyEntity.setYesterdayAddedNum(yestodayAddLose);
-
                 qyEntity.setDeptId(deptId);
+                qyEntity.setLocalDate(date);
+                if (value.size() == 0) {
+                    qyEntity.setDeptId(deptId);
+                    qyEntity.setTotalCustomerNum(0);
+                    qyEntity.setYesterdayAddedNum(0);
+                    qyEntity.setYesterdayCustomerDel(0);
+                    qyEntity.setYesterdayEmployeeDel(0);
+                    qyEntities.add(qyEntity);
+                    continue;
 
-                //昨日流失
-                int yestodayLose = 0;
-                if (value.size() > 0) {
-                    Integer yestodayLose1 = customerMapper.getYestodayLose(value);
-                    if (ObjectUtils.isEmpty(yestodayLose1)) {
-                        yestodayLose = 0;
+                }
+                //计算净增
+                Integer increase = customerDetailMapper.selectIncrease(value, date);
+                qyEntity.setYesterdayAddedNum(increase);
+                //累计客户
+                Integer all = customerMapper.count(value, "NONE", date);
+                //拿到所有客户id
+                //*************************************千万不要忘记这个要从客户关系表中查********************************************//
+                qyEntity.setTotalCustomerNum(customerDetailMapper.selectAddAllNum(value));
+                List<Long> customerId = customerDetailMapper.selectCusDelete(value, date).parallelStream().map(EmployeeCustomerListDTO::getIdCustomer).collect(Collectors.toList());
+                //计算员工删除客户数
+                // 拿到今天所有的员工和客户关系
+                List<CustomerDetailDO> todayCustomerDetailDOS = customerDetailMapper.selectAllCustomer(value, date);
+                //拿到全部的员工客户关系,包括以前的
+                List<CustomerDetailDO> customerDetailDOS = customerDetailMapper.selectAllCustomer(value, null);
+                //拿到还是客户的客户id
+                List<Long> isCustomer = customerDetailDOS.parallelStream().filter(x -> StringUtils.equals(x.getState(), ADD)).map(CustomerDetailDO::getIdCustomer).collect(Collectors.toList());
+                //此时的customerId就已经都是非客户id
+                customerId.removeAll(isCustomer);
+                //非客户
+                List<CustomerDetailDO> notCustomerAll = new ArrayList<>();
+                customerId.stream().forEach(x -> {
+                    todayCustomerDetailDOS.forEach(y -> {
+                        Long idCustomer = y.getIdCustomer();
+                        if (x.equals(idCustomer)) {
+                            notCustomerAll.add(y);
+                        }
+                    });
+                });
+                //把删除客户或者客户删除员工的那一条记录拿到
+                List<CustomerDetailDO> notCustomer = notCustomerAll.parallelStream().filter(x -> StringUtils.equals(x.getState(), x.getType())).collect(Collectors.toList());
+                //是员工删除客户的集合
+                List<CustomerDetailDO> customerDeleteList = notCustomer.parallelStream().filter(x -> StringUtils.equals(x.getState(), CUSTOMER_DEL)).collect(Collectors.toList());
+                //客户删除员工的集合
+                List<CustomerDetailDO> employeeDeleteList = notCustomer.parallelStream().filter(x -> StringUtils.equals(x.getState(), EMPLOYEE_DEL)).collect(Collectors.toList());
+                List<Long> customerDeleteIds = customerDeleteList.parallelStream().map(CustomerDetailDO::getIdCustomer).collect(Collectors.toList());
+                List<Long> employeeDeleteIds = employeeDeleteList.parallelStream().map(CustomerDetailDO::getIdCustomer).collect(Collectors.toList());
+                //双删客户
+                List<Long> doubleRemove = customerDeleteIds.parallelStream().filter(employeeDeleteIds::contains).collect(Collectors.toList());
+                //双删客户实体
+                List<CustomerDetailDO> doubleRemoveEntity = new ArrayList<>();
+                doubleRemove.parallelStream().forEach(x -> {
+                    todayCustomerDetailDOS.forEach(y -> {
+                        if (x.equals(y.getIdCustomer())) {
+                            doubleRemoveEntity.add(y);
+                        }
+                    });
+                });
+                int customerDeleteNum = 0;
+                int employeeDeleteNum = 0;
+                //根据客户id分组
+                Map<Long, List<CustomerDetailDO>> doubleRemoveGroup = doubleRemoveEntity.parallelStream().collect(Collectors.groupingBy(CustomerDetailDO::getIdCustomer));
+
+
+                for (Map.Entry<Long, List<CustomerDetailDO>> map : doubleRemoveGroup.entrySet()) {
+                    Long idCustomer = map.getKey();
+                    List<CustomerDetailDO> doubleRemoveList = map.getValue();
+                    String type = doubleRemoveList.parallelStream().sorted(Comparator.comparing(CustomerDetailDO::getId).reversed()).collect(Collectors.toList()).get(0).getType();
+                    if (type.equals(EMPLOYEE_DEL)) {
+                        employeeDeleteNum++;
                     } else {
-                        yestodayLose = yestodayLose1;
-
+                        customerDeleteNum++;
                     }
+
+
                 }
 
-                qyEntity.setYesterdayLoseNum(yestodayLose);
-                //净增
-                qyEntity.setYesterdayNetIncreaseNum(qyEntity.getYesterdayAddedNum() - yestodayLose);
-                //客户总数。去重
-                int none = 0;
+                qyEntity.setYesterdayEmployeeDel(employeeDeleteList.size() - customerDeleteNum);
+                qyEntity.setYesterdayCustomerDel(customerDeleteList.size() - employeeDeleteNum);
 
-                if (value.size() > 0) {
-                    none = customerMapper.count(value, "NONE", true);
-                }
-
-                //累计失去
-                int employeeDel = 0;
-                if (value.size() > 0) {
-                    employeeDel = customerMapper.count(value, "EMPLOYEE_DEL", false);
-                }
-                DepartmentDO departmentDO = deptPath.get(deptId);
-                qyEntity.setDeptName(departmentDO.getDepName());
-                qyEntity.setTotalCustomerNum(none);
-                qyEntity.setTotalLoseCustomerNum(employeeDel);
-                qyEntity.setPath(departmentDO.getPaths());
-                qyEntity.setParentId(departmentDO.getParentId());
-                qyEntity.setLevel(departmentDO.getDepLevel());
                 qyEntities.add(qyEntity);
             }
             //先倒序
-            List<QYEntity> collect = qyEntities.stream().sorted(Comparator.comparing(QYEntity::getLevel)).collect(Collectors.toList());
-            return collect;
-        } catch (Exception e) {
+            return qyEntities;
+        } catch (
+                Exception e) {
             log.error("错误", e);
         }
         return null;

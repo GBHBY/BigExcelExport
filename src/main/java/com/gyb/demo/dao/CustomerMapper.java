@@ -6,6 +6,7 @@ import com.gyb.demo.bean.QYEntity;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -30,7 +31,9 @@ public interface CustomerMapper {
 
     Integer getYestodayAddLose(@Param("ids") List<Long> customerId);
 
-    Integer getYestodayLose(@Param("ids") List<Long> value);
+    Integer getYestodayLose(@Param("ids") List<Long> value,@Param("delete")String tag);
 
-    int count(@Param("ids") List<Long> value,@Param("delete") String none,@Param("dis") boolean b);
+    int count(@Param("ids") List<Long> value, @Param("delete") String none, LocalDate date);
+
+
 }
