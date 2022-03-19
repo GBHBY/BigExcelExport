@@ -2,12 +2,15 @@ package com.gyb.demo.dao;
 
 import com.gyb.demo.bean.CustomerDept;
 import com.gyb.demo.bean.DepartmentDO;
+import com.gyb.demo.bean.DeptCustomerNumDTO;
 import com.gyb.demo.bean.QYEntity;
+import org.apache.ibatis.annotations.MapKey;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Description:
@@ -33,7 +36,15 @@ public interface CustomerMapper {
 
     Integer getYestodayLose(@Param("ids") List<Long> value,@Param("delete")String tag);
 
-    int count(@Param("ids") List<Long> value, @Param("delete") String none, LocalDate date);
+    /**
+     * 计算累计的
+     * @param value
+     * @param none
+     * @param date
+     * @return
+     */
+    int count(@Param("ids") List<Long> value, @Param("delete") String none,@Param("date") LocalDate date);
 
 
+    List<Long> selectAddCustomerIds(@Param("ids") List<Long> value,@Param("date") LocalDate localDate);
 }

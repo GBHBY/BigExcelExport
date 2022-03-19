@@ -1,5 +1,9 @@
 package com.gyb.demo.util;
 
+import cn.hutool.json.JSONArray;
+import cn.hutool.json.JSONObject;
+import cn.hutool.json.JSONUtil;
+import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.gyb.demo.bean.*;
 import com.gyb.demo.controller.QYExport;
@@ -8,11 +12,13 @@ import com.gyb.demo.dao.CustomerMapper;
 import com.gyb.demo.thread.QuanYeeThread;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
+import org.apache.poi.ss.formula.functions.T;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -38,6 +44,16 @@ import java.util.stream.Collectors;
 @Component
 @Slf4j
 public class QYExportService extends BigExcelStyle {
+
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
+
+
+    /**
+     * 所有部门信息集合
+     */
+    private static final String ALL_DEPARTMENT_KEY = "ALL_DEPARTMENT";
+
     private static int SIZE = 30000;
     final CountDownLatch cdl = new CountDownLatch(1);
 
@@ -53,6 +69,8 @@ public class QYExportService extends BigExcelStyle {
     private final String CUSTOMER_DEL = "CUSTOMER_DEL";
     private final String EMPLOYEE_DEL = "EMPLOYEE_DEL";
     private final String ADD = "ADD";
+
+    private final String CUSTOMER_NUM_KEY = "CUSTOMER_NUM";
 
 
     @Autowired
@@ -123,6 +141,11 @@ public class QYExportService extends BigExcelStyle {
         cell5.setCellStyle(styleMap.get("head"));
 
         Cell cell6 = row1.createCell(line++);
+        if(ObjectUtils.isEmpty(qy.getTotalCustomerNum())){
+            System.out.println();
+            qy.setTotalCustomerNum(888888);
+        }
+
         cell6.setCellValue(qy.getTotalCustomerNum());
         cell6.setCellStyle(styleMap.get("head"));
 
@@ -176,6 +199,52 @@ public class QYExportService extends BigExcelStyle {
     }
 
     /**
+     * 获取每个部门的员工列表
+     *
+     * @return
+     */
+    public Map<Long, List<Long>> getDeptEmployee() {
+//            部门，员工
+        Map<Long, List<Long>> deptEm = new HashMap<>();
+
+        Object deptEmployee = stringRedisTemplate.opsForValue().get(ALL_DEPARTMENT_KEY);
+        if (ObjectUtils.isNotEmpty(deptEmployee)) {
+            Map<String, List<String>> temMap = JSONUtil.toBean(deptEmployee.toString(), Map.class);
+            for (Map.Entry<String, List<String>> entry : temMap.entrySet()) {
+                JSONArray jsonArray = JSONUtil.parseArray(entry.getValue());
+                List<Long> ids = JSONUtil.toList(jsonArray, Long.class);
+                deptEm.put(Long.valueOf(entry.getKey()), ids);
+
+            }
+            return deptEm;
+        }
+
+
+        //所有部门
+        List<DepartmentDO> deptList = customerMapper.finadAllDept();
+
+        //路径，人员
+        Map<String, List<CustomerDept>> pathEmp = new HashMap<>();
+
+        //拿到员工
+        deptList.forEach(x -> {
+            List<CustomerDept> allEmp = customerMapper.findAllEmp(x.getPaths());
+            pathEmp.put(x.getPaths(), allEmp);
+
+        });
+
+        deptList.forEach(x -> {
+            //拿到这个路径下的员工集合
+            List<CustomerDept> customerDepts = pathEmp.get(x.getPaths());
+            // 把一个部门下的所有员工放入，如果是1级部门，就会把全部的员工都放进去
+            deptEm.put(x.getId(), customerDepts.parallelStream().map(CustomerDept::getCustomerId).collect(Collectors.toList()));
+        });
+
+        return deptEm;
+    }
+
+
+    /**
      * @param date
      * @return
      */
@@ -183,39 +252,12 @@ public class QYExportService extends BigExcelStyle {
         long l = System.currentTimeMillis();
         try {
             LocalDate localDate = LocalDate.parse(date);
-            //所有部门
-            List<DepartmentDO> deptList = customerMapper.finadAllDept();
+            Map<Long, List<Long>> deptEm = getDeptEmployee();
 
-            //路径，部门
-            Map<String, DepartmentDO> pathDept = new HashMap<>();
-
-            deptList.parallelStream().forEach(x -> {
-                pathDept.put(x.getPaths(), x);
-            });
-
-            // 部门
-            Map<Long, DepartmentDO> deptPath = new HashMap<>();
-            //路径，人员
-            Map<String, List<CustomerDept>> pathEmp = new HashMap<>();
-
-            //拿到员工
-            deptList.forEach(x -> {
-                List<CustomerDept> allEmp = customerMapper.findAllEmp(x.getPaths());
-                pathEmp.put(x.getPaths(), allEmp);
-
-            });
-
-//            部门，员工
-            Map<Long, List<Long>> deptEm = new HashMap<>();
-            deptList.forEach(x -> {
-                //拿到这个路径下的员工集合
-                List<CustomerDept> customerDepts = pathEmp.get(x.getPaths());
-                // 把一个部门下的所有员工放入，如果是1级部门，就会把全部的员工都放进去
-                deptEm.put(x.getId(), customerDepts.parallelStream().map(CustomerDept::getCustomerId).collect(Collectors.toList()));
-                deptPath.put(x.getId(), x);
-            });
             List<QYEntity> qyEntities = new ArrayList<>();
             log.info("获取部门耗时{}秒", (System.currentTimeMillis() - 1));
+
+            Map<String, Integer> allCustomer = getAllCustomer(localDate, deptEm);
 
             for (Map.Entry<Long, List<Long>> entry : deptEm.entrySet()) {
 //            List<Long> value = new ArrayList<>();
@@ -240,14 +282,20 @@ public class QYExportService extends BigExcelStyle {
                     continue;
 
                 }
-                //计算净增
-                Integer increase = customerDetailMapper.selectIncrease(value, localDate);
-                qyEntity.setYesterdayAddedNum(increase);
+                //拿到今日新增的客户id，并去重
+                List<Long> idList = customerDetailMapper.selectIncrease(value, localDate);
+                //拿到该部门下所有已经是好友的客户
+                List<Long> allAddCustomer = customerMapper.selectAddCustomerIds(value, localDate.minusDays(1));
+//                idList.removeAll(allAddCustomer);
+                List<Long> longs = removeAll(idList, allAddCustomer);
+
+                qyEntity.setYesterdayAddedNum(longs.size());
                 //累计客户
-                Integer all = customerMapper.count(value, "NONE", localDate);
+                Integer all = allCustomer.get(String.valueOf(deptId));
+                if(ObjectUtils.isEmpty(all)){
+                    System.out.println();
+                }
                 //拿到所有客户id
-                //*************************************千万不要忘记这个要从客户关系表中查********************************************//
-//            qyEntity.setTotalCustomerNum(customerDetailMapper.selectAddAllNum(value));
                 qyEntity.setTotalCustomerNum(all);
                 //拿到日期为date的被删除的客户id
                 List<Long> todayDeleteCusList = customerDetailMapper.selectCusDelete(value, localDate).parallelStream().map(CustomerDetailDO::getIdCustomer).collect(Collectors.toList());
@@ -255,7 +303,7 @@ public class QYExportService extends BigExcelStyle {
 
                     //拿到date日期被删除的客户和他的员工的最新关系是ADD的
 
-                    List<CustomerDetailDO> upDateIsAdd = customerDetailMapper.selectUpToDate(todayDeleteCusList);
+                    List<CustomerDetailDO> upDateIsAdd = customerDetailMapper.selectUpToDate(todayDeleteCusList, localDate);
                     List<Long> upDateIsAddId = upDateIsAdd.parallelStream().filter(x -> StringUtils.equals(ADD, x.getState())).map(CustomerDetailDO::getIdCustomer).collect(Collectors.toList());
 
 
@@ -330,6 +378,69 @@ public class QYExportService extends BigExcelStyle {
             log.error("错误", e);
         }
         return null;
+    }
+
+
+    /**
+     * Description: 获取每个部门的总客户数
+     * params:
+     * author: GB
+     * datetime: 2022/3/16 20:05
+     */
+
+    public Map<String, Integer> getAllCustomer(LocalDate localDate, Map<Long, List<Long>> deptEm) {
+
+        String s = stringRedisTemplate.opsForValue().get(CUSTOMER_NUM_KEY);
+        if (StringUtils.isBlank(s)) {
+
+            //每个部门的总客户数
+            Map<String, Integer> allCustomerNum = new HashMap<>(128);
+            for (Map.Entry<Long, List<Long>> map : deptEm.entrySet()) {
+                Integer none = customerMapper.count(map.getValue(), "NONE", localDate);
+                allCustomerNum.put(String.valueOf(map.getKey()), none);
+            }
+            stringRedisTemplate.opsForValue().set(CUSTOMER_NUM_KEY, JSONUtil.parseObj(allCustomerNum, false).toString(), 1, TimeUnit.DAYS);
+
+            return allCustomerNum;
+
+        } else {
+            Map map1 = JSONUtil.toBean(s, Map.class);
+            return map1;
+        }
+    }
+
+
+    public static void main(String[] args) {
+        List<Integer> ids = new ArrayList<>();
+        ids.add(213);
+        ids.add(214);
+        ids.add(215);
+        ids.add(216);
+        ids.add(217);
+        ids.add(219);
+        List<Integer> ids2 = new ArrayList<>();
+        ids2.add(213);
+        ids2.add(214);
+        ids2.add(215);
+        ids2.add(216);
+        ids2.add(217);
+        ids2.add(2312);
+        ids2.add(2315);
+        ids2.add(2317);
+        ids.removeAll(ids2);
+        System.out.println();
+
+    }
+
+    public List<Long> removeAll(List<Long> source, List<Long> destination) {
+        List<Long> result = new LinkedList<>();
+        Set<Long> destinationSet = new HashSet<Long>(destination);
+        for(Long t : source) {
+            if (!destinationSet.contains(t)) {
+                result.add(t);
+            }
+        }
+        return result;
     }
 
 

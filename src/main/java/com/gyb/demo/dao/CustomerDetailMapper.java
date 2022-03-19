@@ -2,7 +2,6 @@ package com.gyb.demo.dao;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.gyb.demo.bean.CustomerDetailDO;
-import com.gyb.demo.bean.EmployeeCustomerListDTO;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 
@@ -28,7 +27,7 @@ public interface CustomerDetailMapper extends BaseMapper<CustomerDetailDO> {
      * @param date
      * @return
      */
-    Integer selectIncrease(@Param("ids") List<Long> value, @Param("date") LocalDate date);
+    List<Long> selectIncrease(@Param("ids") List<Long> value, @Param("date") LocalDate date);
 
     List<CustomerDetailDO> selectCusDelete(@Param("ids") List<Long> value, @Param("date") LocalDate date);
 
@@ -37,6 +36,7 @@ public interface CustomerDetailMapper extends BaseMapper<CustomerDetailDO> {
 
     Integer selectAddAllNum(@Param("ids") List<Long> value);
 
-    List<CustomerDetailDO> selectUpToDate(@Param("ids") List<Long> idCustomer);
+    List<CustomerDetailDO> selectUpToDate(@Param("ids") List<Long> idCustomer, @Param("date") LocalDate localDate);
+
 
 }

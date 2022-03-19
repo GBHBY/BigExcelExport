@@ -11,8 +11,8 @@
 
 
     </resultMap>
-    <select id="selectIncrease" resultType="java.lang.Integer">
-        select count(*) FROM  ( select DISTINCT(id_customer)
+    <select id="selectIncrease" resultType="Long">
+         select DISTINCT(id_customer)
         FROM
         (select  ROW_NUMBER() over (PARTITION by id_customer,id_employee order by id desc ) as rn, u.* from
         bf_customer_detail u
@@ -23,7 +23,7 @@
         </foreach>
         and u.state = 'ADD' and create_time = #{date}
         ) a
-        where a.rn = 1)  b
+        where a.rn = 1
 
     </select>
     <select id="selectCusDelete" resultType="com.gyb.demo.bean.CustomerDetailDO">
@@ -97,7 +97,9 @@
               <foreach collection="ids" separator="," open="(" close=")" item="id">
         #{id}
 
-    </foreach> ) a
+    </foreach>
+          and create_time <![CDATA[ <= ]]>#{date}
+            ) a
         where a.rn = 1
 
     </select>

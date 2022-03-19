@@ -13,7 +13,7 @@
 
 
         FROM dustess_bf_auth.bf_auth_department
-        WHERE  deleted = 0
+        WHERE   deleted = 0
 
         ORDER BY dep_level ASC;
 
@@ -113,9 +113,28 @@
             and
         </if>
         del_type = #{delete}
-        and add_time <![CDATA[ <=  ]]>  DATE_FORMAT( DATE_SUB(CURDATE(), INTERVAL 1 DAY), '%Y-%m-%d 23:59:59')
+        and add_time <![CDATA[ <=  ]]>  DATE_FORMAT(#{date} , '%Y-%m-%d 23:59:59')
 
             ) tem
+
+
+    </select>
+    <select id="selectAddCustomerIds" resultType="java.lang.Long">
+
+        select  distinct id_customer
+
+        from dustess_bf_customer.bf_employee_customer
+
+        where
+        add_time <![CDATA[ <=  ]]>  DATE_FORMAT( #{date}, '%Y-%m-%d 23:59:59')
+        <if test="ids.size()>0">
+            and id_employee in
+            <foreach collection="ids" close=")" open="(" separator="," item="id">
+                #{id}
+            </foreach>
+        </if>
+
+        and del_type = 'NONE'
 
 
     </select>
