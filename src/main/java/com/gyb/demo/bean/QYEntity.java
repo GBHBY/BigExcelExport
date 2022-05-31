@@ -18,7 +18,7 @@ import java.time.LocalDate;
  * </pre>
  */
 @Data
-public class QYEntity implements Serializable {
+public class QYEntity extends DeptCascade implements Serializable {
 
 
     @ApiModelProperty(value = "日新增客户数")

@@ -1,6 +1,9 @@
 package com.gyb.demo.controller;
 
+import cn.hutool.core.util.ClassUtil;
 import com.gyb.demo.util.QYExportService;
+import io.minio.MinioClient;
+import io.minio.errors.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
@@ -8,20 +11,25 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.tomcat.util.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.util.ClassUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.xmlpull.v1.XmlPullParserException;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
+import java.net.URL;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Description:
@@ -44,6 +52,16 @@ public class QYExport {
 
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
+
+    @Autowired
+    private QYExportService qyExportService;
+
+    @Autowired
+    private MinioClient minioClient;
+
+
+    @Value("${minio.bucketName}")
+    private String bucketName;
 
 
     @GetMapping("export")
@@ -88,6 +106,35 @@ public class QYExport {
 
     }
 
+
+    @GetMapping("minio")
+    public void demo2() throws IOException, InvalidArgumentException, InvalidBucketNameException, InsufficientDataException, XmlPullParserException, ErrorResponseException, NoSuchAlgorithmException, NoResponseException, InvalidKeyException, InternalException {
+        String fileName = "2022-03-242.xlsx";
+        File file = new File(fileName);
+        if(!file.exists()){
+            file.createNewFile();
+        }
+        InputStream inputStream = new FileInputStream(file);
+        minioClient.putObject(bucketName, file.getName(), inputStream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8");
+    }
+
+
+    @GetMapping("demo")
+    public void demo() {
+//        qyExportService.set();
+
+    }
+
+
+    public static void main(String[] args) {
+        List<Integer> list  = new ArrayList<>();
+        list.add(126);
+        list.add(124);
+        list.add(125);
+        list.add(126);
+        List<Integer> collect = list.parallelStream().sorted(Comparator.comparing(Integer::intValue)).collect(Collectors.toList());
+        System.out.println();
+    }
 
 
 }

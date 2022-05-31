@@ -1,9 +1,6 @@
 package com.gyb.demo.dao;
 
-import com.gyb.demo.bean.CustomerDept;
-import com.gyb.demo.bean.DepartmentDO;
-import com.gyb.demo.bean.DeptCustomerNumDTO;
-import com.gyb.demo.bean.QYEntity;
+import com.gyb.demo.bean.*;
 import org.apache.ibatis.annotations.MapKey;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
@@ -47,4 +44,8 @@ public interface CustomerMapper {
 
 
     List<Long> selectAddCustomerIds(@Param("ids") List<Long> value,@Param("date") LocalDate localDate);
+
+    @MapKey("id")
+    Map<Long,DeptCascade> getDeptCascade();
+
 }

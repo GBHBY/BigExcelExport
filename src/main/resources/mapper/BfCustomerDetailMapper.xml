@@ -39,7 +39,6 @@
 
         and state in ('EMPLOYEE_DEL','CUSTOMER_DEL')
 
-
     </select>
     <select id="selectAllCustomer" resultType="com.gyb.demo.bean.CustomerDetailDO">
         select

@@ -2,18 +2,17 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.gyb.demo.dao.CustomerMapper">
 
-<!--dustess_bf_auth.-->
+    <!--dustess_bf_auth.-->
     <select id="finadAllDept" resultType="com.gyb.demo.bean.DepartmentDO">
-        SELECT
-               id,
+        SELECT id,
                paths,
                parent_id parentId,
                dep_level depLevel,
-               dep_name depName
+               dep_name  depName
 
 
         FROM dustess_bf_auth.bf_auth_department
-        WHERE   deleted = 0
+        WHERE deleted = 0
 
         ORDER BY dep_level ASC;
 
@@ -27,30 +26,26 @@
     </select>
     <!--dustess_bf_auth.-->
     <select id="findAllEmp" resultType="com.gyb.demo.bean.CustomerDept">
-        SELECT
-            a.id customerId,
-            a.deptId AS deptId
-        FROM
-            (
-                SELECT
-                    au.id,
-                    ad.dep_name ,
-                    ad.paths paths,
-                    ad.id deptId
-                FROM
-                    dustess_bf_auth.bf_auth_employee au
-                        LEFT JOIN dustess_bf_auth.bf_auth_department_employee_rel adur ON adur.employee_id = au.id
-                        LEFT JOIN dustess_bf_auth.bf_auth_department ad ON ad.id = adur.department_id
-                where
-                    1=1 and au.deleted = 0 AND ad.deleted = 0
-                  AND (ad.paths like concat(#{path},"-","%") or ad.paths = #{path})
-
-            ) a
+        SELECT a.id        customerId,
+               a.deptId AS deptId
+        FROM (
+                 SELECT au.id,
+                        ad.dep_name,
+                        ad.paths paths,
+                        ad.id    deptId
+                 FROM dustess_bf_auth.bf_auth_employee au
+                          LEFT JOIN dustess_bf_auth.bf_auth_department_employee_rel adur ON adur.employee_id = au.id
+                          LEFT JOIN dustess_bf_auth.bf_auth_department ad ON ad.id = adur.department_id
+                 where 1 = 1
+                   and au.deleted = 0
+                   AND ad.deleted = 0
+                   AND (ad.paths like concat(#{path}, "-", "%") or ad.paths = #{path})
+             ) a
 
 
     </select>
 
-<!-- dustess_bf_customer.-->
+    <!-- dustess_bf_customer.-->
     <select id="getYestodayAddLose" resultType="java.lang.Integer">
         select count(*) from (select
 
@@ -76,7 +71,7 @@
     <!--dustess_bf_customer.-->
     <select id="getYestodayLose" resultType="java.lang.Integer">
         select
-        count(*) from (select  distinct id_customer
+        count(*) from (select distinct id_customer
 
         from dustess_bf_customer.bf_employee_customer
 
@@ -106,7 +101,7 @@
         where
         <if test="ids.size()>0">
 
-             id_employee in
+            id_employee in
             <foreach collection="ids" close=")" open="(" separator="," item="id">
                 #{id}
             </foreach>
@@ -115,13 +110,13 @@
         del_type = #{delete}
         and add_time <![CDATA[ <=  ]]>  DATE_FORMAT(#{date} , '%Y-%m-%d 23:59:59')
 
-            ) tem
+        ) tem
 
 
     </select>
     <select id="selectAddCustomerIds" resultType="java.lang.Long">
 
-        select  distinct id_customer
+        select distinct id_customer
 
         from dustess_bf_customer.bf_employee_customer
 
@@ -135,6 +130,54 @@
         </if>
 
         and del_type = 'NONE'
+
+
+    </select>
+    <select id="getDeptCascade" resultType="com.gyb.demo.bean.DeptCascade">
+        SELECT bf1.id           id,
+               bf1.paths        path,
+
+
+               bf1.dep_name  as name,
+
+               bf2.dep_name  as firstFatherName,
+
+
+               bf3.dep_name  as secFatherName,
+
+
+               bf4.dep_name  as thirdFatherName,
+
+
+               bf5.dep_name  as fourthFatherName,
+
+
+               bf6.dep_name  as fifthFatherName,
+
+
+               bf7.dep_name  as sixthFatherName,
+
+
+               bf8.dep_name  as seventhFatherName,
+
+               bf1.dep_level as level
+
+        FROM dustess_bf_auth.bf_auth_department bf1
+
+                 LEFT JOIN dustess_bf_auth.bf_auth_department bf2 ON bf2.id = bf1.parent_id
+
+                 left join dustess_bf_auth.bf_auth_department bf3 on bf3.id = bf2.parent_id
+
+                 left join dustess_bf_auth.bf_auth_department bf4 on bf4.id = bf3.parent_id
+
+                 left join dustess_bf_auth.bf_auth_department bf5 on bf5.id = bf4.parent_id
+
+                 left join dustess_bf_auth.bf_auth_department bf6 on bf6.id = bf5.parent_id
+
+                 left join dustess_bf_auth.bf_auth_department bf7 on bf7.id = bf6.parent_id
+
+                 left join dustess_bf_auth.bf_auth_department bf8 on bf8.id = bf7.parent_id
+        order by bf1.dep_level asc;
 
 
     </select>
