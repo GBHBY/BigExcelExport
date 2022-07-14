@@ -5,6 +5,7 @@ import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author gb
@@ -18,11 +19,16 @@ public interface StudentMapper {
      * create by: gb
      * description: TODO
      * create time: 2021/7/17 15:05
+     *
      * @param i
      * @param y
      * @return
      */
-     List<Student> findAllStudent(@Param("i") int i,@Param("y") int y);
+    List<Student> findAllStudent(@Param("i") int i, @Param("y") int y);
+
+
+//    @MybatisMap
+    List<Map<Object,Object>> getMap();
 
 
 }

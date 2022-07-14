@@ -1,5 +1,6 @@
 package com.gyb.demo.controller;
 
+import com.gyb.demo.service.StudentService;
 import com.gyb.demo.util.StudentExport;
 import org.apache.commons.io.FileUtils;
 import org.apache.tomcat.util.codec.binary.Base64;
@@ -25,6 +26,10 @@ public class ExcelExport {
     private StudentExport studentExport;
 
 
+    @Autowired
+    private StudentService studentService;
+
+
     /**
      * create by: gb
      * description: TODO
@@ -43,17 +48,21 @@ public class ExcelExport {
         String filePath = "D://";
         File file = new File(filePath + format1 + "-" + fileName);
         if (file.exists()) {
-            file.delete();
+            if (!file.delete()) {
+                System.out.println("删除失败");
+            }
         }
         try {
-            file.createNewFile();
+            if (!file.createNewFile()) {
+                System.out.println("创建失败");
+            }
         } catch (IOException e) {
             System.out.println("创造文件失败");
             return "文件失败";
         } finally {
         }
         studentExport.exportExcel(file);
-        System.out.println("完成组装："+ (System.currentTimeMillis()-l));
+        System.out.println("完成组装：" + (System.currentTimeMillis() - l));
         String s = null;
         try {
             s = Base64.encodeBase64String(FileUtils.readFileToByteArray(file));
@@ -69,6 +78,14 @@ public class ExcelExport {
 
         return s;
 
+
+    }
+
+
+    @GetMapping("/test2")
+    public void test() {
+
+        studentService.getMap();
 
     }
 

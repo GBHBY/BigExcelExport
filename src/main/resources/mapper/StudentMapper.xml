@@ -1,14 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.gyb.demo.dao.StudentMapper">
-  <resultMap id="BaseResultMap" type="com.gyb.demo.bean.Student">
-    <id column="student_s_id" jdbcType="VARCHAR" property="sId" />
-    <result column="student_s_name" jdbcType="VARCHAR" property="sName" />
-    <result column="student_s_birth" jdbcType="VARCHAR" property="sBirth" />
-    <result column="student_s_sex" jdbcType="VARCHAR" property="sSex" />
-  </resultMap>
-  <select id="findAllStudent" resultType="com.gyb.demo.bean.Student">
-    select * from student where s_id between #{i} and #{y}
-  </select>
+    <resultMap id="BaseResultMap" type="com.gyb.demo.bean.Student">
+        <id column="student_s_id" jdbcType="VARCHAR" property="id"/>
+        <result column="student_s_name" jdbcType="VARCHAR" property="name"/>
+        <result column="student_s_birth" jdbcType="VARCHAR" property="birth"/>
+        <result column="student_s_sex" jdbcType="VARCHAR" property="sex"/>
+    </resultMap>
+    <select id="findAllStudent" resultType="com.gyb.demo.bean.Student">
+        select *
+        from student
+        where s_id between #{i} and #{y}
+    </select>
+
+
+    <select id="getMap" resultMap="demo">
+        SELECT id,
+               employee name
+        FROM bf_employee_customer
+
+        WHERE id = 55140005;
+
+
+    </select>
+
+
+    <resultMap id="demo" type="java.util.Map">
+        <result property="key" column="id" jdbcType="VARCHAR"/>
+        <result property="value" column="name" jdbcType="VARCHAR"/>
+
+
+    </resultMap>
 
 </mapper>

@@ -3,6 +3,7 @@ package com.gyb.demo.service;
 import com.gyb.demo.bean.Student;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author gb
@@ -33,4 +34,10 @@ public interface StudentService {
      */
 
     List<Student> findAllStudent(int i, int size);
+
+    /**
+     * 测试mybatis返回map
+     * @return
+     */
+    Map<String,String> getMap();
 }

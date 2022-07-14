@@ -14,6 +14,10 @@ import org.springframework.stereotype.Component;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.*;
 
 /**
@@ -96,39 +100,39 @@ public class StudentExport extends BigExcelStyle {
 
 
         Cell cell2 = row1.createCell(line++);
-        cell2.setCellValue(student.getsId());
+        cell2.setCellValue(student.getId());
         cell1.setCellStyle(styleMap.get("head"));
 
         Cell cell3 = row1.createCell(line++);
-        cell3.setCellValue(student.getsName());
+        cell3.setCellValue(student.getName());
         cell3.setCellStyle(styleMap.get("head"));
 
         Cell cell4 = row1.createCell(line++);
-        cell4.setCellValue(student.getsBirth());
+        cell4.setCellValue(student.getBirth());
         cell4.setCellStyle(styleMap.get("head"));
 
         Cell cell5 = row1.createCell(line++);
-        cell5.setCellValue(student.getsSex());
+        cell5.setCellValue(student.getSex());
         cell5.setCellStyle(styleMap.get("text"));
 
         Cell cell6 = row1.createCell(line++);
-        cell6.setCellValue(student.getsAddress());
+        cell6.setCellValue(student.getAddress());
         cell6.setCellStyle(styleMap.get("text"));
 
         Cell cell7 = row1.createCell(line++);
-        cell7.setCellValue(student.getsMessage());
+        cell7.setCellValue(student.getMessage());
         cell7.setCellStyle(styleMap.get("text"));
 
         Cell cell8 = row1.createCell(line++);
-        cell8.setCellValue(student.getsTest1());
+        cell8.setCellValue(student.getTest1());
         cell8.setCellStyle(styleMap.get("text"));
 
         Cell cell9 = row1.createCell(line++);
-        cell9.setCellValue(student.getsTest2());
+        cell9.setCellValue(student.getTest2());
         cell9.setCellStyle(styleMap.get("text"));
 
         Cell cell10 = row1.createCell(line++);
-        cell10.setCellValue(student.getsTest3());
+        cell10.setCellValue(student.getTest3());
         cell10.setCellStyle(styleMap.get("text"));
 
     }
